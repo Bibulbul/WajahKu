@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+
+# Data lokal: database dibuat ulang dari schema.sql + seed_data.sql, foto berisi wajah pengguna
+database/*.db
+static/uploads/
+
+# Dataset dan aset besar yang tidak diperlukan untuk menjalankan aplikasi
+datasets/
+4788-images-Human-Facial-Skin-Defects-Data-main/
+efficientnet_b0_lightweight_final/
