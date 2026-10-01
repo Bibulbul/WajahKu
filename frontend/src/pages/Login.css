@@ -1,0 +1,143 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #F5F7FA 0%, #E8EDF2 100%);
+  padding: 18px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-header h1 {
+  font-size: 32px;
+  color: #2C3E50;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.login-header p {
+  color: #7F8C8D;
+  font-size: 15px;
+}
+
+.login-form {
+  background: white;
+  padding: 36px 28px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.login-form h2 {
+  font-size: 24px;
+  margin-bottom: 24px;
+  color: #2C3E50;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #2C3E50;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #D1D8DD;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: border-color 200ms ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #E8A87C;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: #E8A87C;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  margin-top: 8px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(232, 168, 124, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #FFF5F5;
+  color: #C53030;
+  padding: 11px 14px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  border: 1px solid #FED7D7;
+}
+
+.form-footer {
+  margin-top: 24px;
+  text-align: center;
+  color: #7F8C8D;
+  font-size: 14px;
+}
+
+.form-footer a {
+  color: #E8A87C;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
+}
+
+.test-accounts {
+  margin-top: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.test-accounts p {
+  font-size: 13px;
+  color: #7F8C8D;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.test-accounts small {
+  display: block;
+  font-size: 12px;
+  color: #95A5A6;
+  margin: 3px 0;
+}
