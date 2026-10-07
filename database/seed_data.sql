@@ -116,3 +116,29 @@ INSERT INTO skincare_routines (condition_type, step_number, step_title, step_des
 ('kombinasi', 5, 'Sunscreen hybrid', 'Gunakan sunscreen yang nyaman dan tidak membuat T-zone terlalu oily.'),
 ('kombinasi', 6, 'Multi-masking', 'Gunakan clay mask di T-zone dan hydrating mask di area kering saat maskeran.'),
 ('kombinasi', 7, 'Sesuaikan produk per area', 'Jangan takut menggunakan produk berbeda untuk zona berbeda di wajah.');
+
+INSERT INTO skincare_routines (condition_type, step_number, step_title, step_description) VALUES
+-- Komedo
+('komedo', 1, 'Double cleansing di malam hari', 'Mulai dengan cleansing oil atau balm untuk melarutkan sebum dan sisa makeup, lanjutkan dengan facial wash.'),
+('komedo', 2, 'Gunakan BHA (salicylic acid)', 'BHA larut dalam minyak sehingga bisa masuk ke pori dan melarutkan sumbatan. Mulai 2-3x seminggu.'),
+('komedo', 3, 'Clay mask 1x seminggu', 'Gunakan clay mask di area hidung dan dagu untuk menyerap minyak dan kotoran di pori.'),
+('komedo', 4, 'Moisturizer non-comedogenic', 'Pilih pelembab berlabel non-comedogenic agar tidak menambah sumbatan pori.'),
+('komedo', 5, 'Jangan memencet komedo', 'Memencet bisa memicu iritasi, peradangan, dan bekas gelap. Biarkan bahan aktif bekerja.'),
+-- Flek hitam
+('flek', 1, 'Sunscreen setiap pagi', 'Gunakan sunscreen SPF 30+ dan oleskan ulang tiap 2-3 jam. Tanpa ini, flek akan terus gelap kembali.'),
+('flek', 2, 'Serum vitamin C di pagi hari', 'Vitamin C membantu memudarkan hiperpigmentasi dan melindungi kulit dari radikal bebas.'),
+('flek', 3, 'Serum niacinamide atau alpha arbutin', 'Bahan ini menghambat transfer melanin dan membantu meratakan warna kulit secara bertahap.'),
+('flek', 4, 'Exfoliate lembut 1-2x seminggu', 'AHA ringan membantu mengangkat sel kulit yang berpigmen. Hindari scrub kasar.'),
+('flek', 5, 'Konsisten minimal 8-12 minggu', 'Pemudaran flek butuh waktu. Jika tidak membaik atau flek berubah bentuk, konsultasikan ke dokter kulit.'),
+-- Pori-pori
+('pori', 1, 'Bersihkan wajah 2x sehari', 'Gunakan cleanser yang mengontrol minyak tanpa membuat kulit terasa kesat.'),
+('pori', 2, 'Serum niacinamide', 'Niacinamide membantu mengontrol sebum dan membuat pori tampak lebih halus.'),
+('pori', 3, 'Toner BHA atau AHA', 'Exfoliant membantu menjaga pori tidak tersumbat sehingga tidak tampak melebar.'),
+('pori', 4, 'Moisturizer gel ringan', 'Kulit yang terhidrasi memproduksi minyak lebih seimbang. Pilih tekstur gel.'),
+('pori', 5, 'Sunscreen setiap hari', 'Paparan UV merusak kolagen di sekitar pori sehingga pori tampak makin besar.'),
+-- Kerutan
+('kerutan', 1, 'Sunscreen setiap hari', 'UV adalah penyebab utama penuaan dini. Gunakan SPF 30+ bahkan saat mendung atau di dalam ruangan.'),
+('kerutan', 2, 'Retinol di malam hari', 'Mulai dari konsentrasi rendah 2-3x seminggu. Retinol merangsang produksi kolagen. Tidak untuk ibu hamil.'),
+('kerutan', 3, 'Serum hyaluronic acid', 'Menjaga hidrasi sehingga garis halus tampak lebih samar.'),
+('kerutan', 4, 'Serum vitamin C di pagi hari', 'Antioksidan yang mendukung pembentukan kolagen dan melindungi dari kerusakan lingkungan.'),
+('kerutan', 5, 'Moisturizer dengan peptide atau ceramide', 'Membantu menjaga elastisitas dan skin barrier.');
