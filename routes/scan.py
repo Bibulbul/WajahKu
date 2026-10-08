@@ -50,6 +50,9 @@ def upload():
 
     try:
         conditions, recommendations = analyze_skin_image(filepath)
+    except ValueError as e:
+        os.remove(filepath)
+        return jsonify({'error': str(e)}), 422
     except Exception as e:
         current_app.logger.error(f"Gagal menjalankan analisis: {e}")
         return jsonify({'error': 'Gagal menjalankan analisis kulit'}), 500
