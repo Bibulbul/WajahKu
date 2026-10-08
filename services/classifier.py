@@ -1,4 +1,5 @@
 import os
+import cv2
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
@@ -54,11 +55,25 @@ MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 STD = np.array([0.47853944, 0.4732864, 0.47434163], dtype=np.float32)
 SECONDARY_MIN = 0.25  # ponytail: kondisi ke-2 dst tampil bila probabilitas softmax >= 25%; model single-label, bukan multi-label
 
+FACE_MARGIN = 0.1  # tambahan di tiap sisi kotak wajah, proporsi lebar wajah
+_face = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 _session = ort.InferenceSession(MODEL_PATH, providers=['CPUExecutionProvider'])
+
+def crop_face(img):
+    """Model dilatih dengan foto wajah close-up, jadi foto selfie utuh di-crop ke wajah terbesar.
+    ponytail: Haar cascade hanya mengenali wajah menghadap depan; ganti detektor bila banyak penolakan."""
+    faces = _face.detectMultiScale(np.asarray(img.convert('L')), 1.1, 5, minSize=(80, 80))
+    if not len(faces):
+        raise ValueError('Wajah tidak terdeteksi. Pastikan wajah menghadap kamera dan pencahayaan cukup.')
+    x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
+    m = int(w * FACE_MARGIN)
+    return img.crop((max(x - m, 0), max(y - m, 0), min(x + w + m, img.width), min(y + h + m, img.height)))
+
 
 def analyze_skin_image(image_path):
     """Jalankan model EfficientNet-B0 (ONNX). Preprocessing sama dengan training di notebook."""
-    img = Image.open(image_path).convert('RGB').resize((224, 224), Image.BILINEAR)
+    img = crop_face(Image.open(image_path).convert('RGB')).resize((224, 224), Image.BILINEAR)
     x = ((np.asarray(img, dtype=np.float32) / 255 - MEAN) / STD).transpose(2, 0, 1)[None]
     logits = _session.run(None, {'pixel_values': x})[0][0]
     probs = np.exp(logits - logits.max())
