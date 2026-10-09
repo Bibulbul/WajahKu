@@ -142,3 +142,10 @@ INSERT INTO skincare_routines (condition_type, step_number, step_title, step_des
 ('kerutan', 3, 'Serum hyaluronic acid', 'Menjaga hidrasi sehingga garis halus tampak lebih samar.'),
 ('kerutan', 4, 'Serum vitamin C di pagi hari', 'Antioksidan yang mendukung pembentukan kolagen dan melindungi dari kerusakan lingkungan.'),
 ('kerutan', 5, 'Moisturizer dengan peptide atau ceramide', 'Membantu menjaga elastisitas dan skin barrier.');
+
+INSERT INTO skincare_routines (condition_type, step_number, step_title, step_description) VALUES
+-- Normal
+('normal', 1, 'Gentle cleanser 2x sehari', 'Kulit normal cukup dibersihkan dengan pembersih lembut yang tidak membuat kulit terasa kesat.'),
+('normal', 2, 'Moisturizer ringan', 'Jaga keseimbangan kelembaban dengan pelembab bertekstur lotion atau gel-cream.'),
+('normal', 3, 'Sunscreen setiap pagi', 'Gunakan SPF 30+ untuk mencegah flek dan penuaan dini.'),
+('normal', 4, 'Antioksidan (opsional)', 'Serum vitamin C atau niacinamide membantu menjaga kulit tetap cerah dan sehat.');
