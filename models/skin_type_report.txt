@@ -1,0 +1,18 @@
+TEST (foto asli yang tidak pernah dilihat saat training, 151 foto)
+accuracy 0.444 | macroF1 0.431 | tebak kelas terbanyak 0.318
+              precision    recall  f1-score   support
+
+ combination       0.38      0.36      0.37        14
+         dry       0.43      0.51      0.47        43
+      normal       0.46      0.44      0.45        48
+        oily       0.46      0.41      0.44        46
+
+    accuracy                           0.44       151
+   macro avg       0.43      0.43      0.43       151
+weighted avg       0.44      0.44      0.44       151
+
+confusion (baris=asli, kolom=['combination', 'dry', 'normal', 'oily']):
+[[ 5  2  4  3]
+ [ 4 22  8  9]
+ [ 2 15 21 10]
+ [ 2 12 13 19]]
