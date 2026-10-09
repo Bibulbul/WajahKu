@@ -1,0 +1,20 @@
+TEST (foto asli yang tidak pernah dilihat saat training, 339 foto)
+accuracy 0.956 | macroF1 0.931 | tebak kelas terbanyak 0.516
+              precision    recall  f1-score   support
+
+        acne       0.98      0.97      0.97       175
+  blackheads       0.94      0.93      0.93        81
+  dark_spots       0.86      0.89      0.87        27
+      normal       0.98      1.00      0.99        48
+       pores       0.80      1.00      0.89         8
+
+    accuracy                           0.96       339
+   macro avg       0.91      0.96      0.93       339
+weighted avg       0.96      0.96      0.96       339
+
+confusion (baris=asli, kolom=['acne', 'blackheads', 'dark_spots', 'normal', 'pores']):
+[[169   4   2   0   0]
+ [  3  75   2   0   1]
+ [  0   1  24   1   1]
+ [  0   0   0  48   0]
+ [  0   0   0   0   8]]
