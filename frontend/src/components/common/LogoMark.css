@@ -1,0 +1,32 @@
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.logo-mark svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+}
+
+.logo-mark-nose {
+  fill: var(--mark);
+}
+
+.logo-mark-eyes {
+  transform-origin: 16px 14px;
+  transition: transform 0.12s ease;
+}
+
+.logo-mark:hover .logo-mark-eyes {
+  animation: logo-blink 0.6s ease 2;
+}
+
+@keyframes logo-blink {
+  0%, 100% { transform: scaleY(1); }
+  45%, 55% { transform: scaleY(0.1); }
+}
