@@ -27,13 +27,13 @@
   stroke: var(--ink);
   stroke-width: 3;
   stroke-linecap: round;
-  transition: d 0.3s ease;
+  transition: d 180ms ease-out;
 }
 
 /* Mata berkedip sesekali */
 .face-dots-eye {
   animation: blink 5.5s infinite;
-  transition: transform 0.25s ease;
+  transition: transform 180ms ease-out;
 }
 
 /* Password: mata tertutup */
@@ -54,7 +54,7 @@
 }
 
 .is-shaking {
-  animation: head-shake 0.5s ease;
+  animation: head-shake 200ms ease-out;
 }
 
 @keyframes dot-breathe {
@@ -74,15 +74,20 @@
 
 @keyframes head-shake {
   0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-10px); }
-  40% { transform: translateX(9px); }
-  60% { transform: translateX(-6px); }
-  80% { transform: translateX(3px); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .face-dots-skin circle,
-  .face-dots-eye {
+  .face-dots-eye,
+  .is-shaking {
     animation: none;
+  }
+
+  .face-dots-eye,
+  .face-dots-mouth {
+    transition: none;
   }
 }

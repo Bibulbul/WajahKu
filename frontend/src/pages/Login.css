@@ -64,24 +64,87 @@
   color: var(--ink-soft);
 }
 
-.login-form .error-message {
-  margin-bottom: var(--space-4);
-}
-
 .login-form .form-group input {
+  width: 100%;
   min-height: 48px;
   background: var(--paper);
 }
 
+/* Teks kecil hanya muncul saat kolom password fokus. Tempatnya tetap
+   disediakan supaya form tidak bergeser. */
 .field-hint {
   font-size: var(--text-sm);
   color: var(--ink-soft);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 150ms ease-out, visibility 150ms;
+}
+
+.field-hint.is-visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Error di bawah field. Saat kosong, jarak gap ditarik balik supaya
+   live region tetap ada tanpa memakan tempat. */
+.field-error {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--mark);
+}
+
+.field-error:empty {
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.form-error:empty {
+  margin-top: 0;
+}
+
+.form-error:not(:empty) {
+  margin-bottom: var(--space-3);
+}
+
+.login-form .form-group input[aria-invalid='true'] {
+  border-color: var(--mark);
+}
+
+.password-field {
+  position: relative;
+}
+
+.login-form .password-field input {
+  padding-right: 120px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.password-toggle:hover {
+  color: var(--ink);
 }
 
 .login-submit {
   width: 100%;
   min-height: 50px;
   margin-top: var(--space-2);
+}
+
+.login-face-mini {
+  width: 88px;
+  margin-bottom: var(--space-4);
 }
 
 .link-button {
@@ -112,13 +175,9 @@
 }
 
 .test-accounts {
-  text-align: right;
-}
-
-.test-accounts summary {
-  cursor: pointer;
-  color: var(--ink);
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 /* Panggung: gradasi blush, wajah titik-titik, alur analisis */
@@ -165,8 +224,7 @@
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  animation: feed-in 0.4s ease;
+  animation: feed-in 200ms ease-out;
 }
 
 .feed-row-1 { opacity: 0.7; }
@@ -192,10 +250,6 @@
   height: 8px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.8);
-}
-
-.stage-brand {
-  display: none;
 }
 
 .feed-caret {
@@ -242,22 +296,8 @@
     grid-template-columns: 1fr;
   }
 
+  /* Panggung disembunyikan, wajah kecil pindah ke atas form */
   .login-stage {
-    order: -1;
-    padding: var(--space-5) var(--space-4);
-  }
-
-  .stage-copy p {
-    display: none;
-  }
-
-  .stage-face {
-    width: 150px;
-    margin: var(--space-4) auto;
-  }
-
-  .feed-row-1,
-  .feed-row-2 {
     display: none;
   }
 
@@ -273,31 +313,11 @@
     display: none;
   }
 
-  .link-button {
-  background: none;
-  border: none;
-  padding: 0;
-  font-weight: 600;
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.login-switch-inline {
+  .login-switch-inline {
     display: block;
   }
 
-
-  .stage-brand {
-    display: block;
-    margin-bottom: var(--space-4);
-  }
-
-  .login-topbar .login-brand {
-    display: none;
-  }
-
-  .login-topbar {
-    display: none;
+  .login-footer {
+    flex-wrap: wrap;
   }
 }

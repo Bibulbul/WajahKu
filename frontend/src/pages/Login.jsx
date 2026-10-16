@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import FaceDots from '../components/common/FaceDots';
@@ -55,32 +55,90 @@ const AnalysisFeed = () => {
   );
 };
 
+const STACKED_QUERY = '(max-width: 900px)';
+
+// Hanya tampil saat development, sesuai akun yang dibuat di database/db.py
+const TEST_ACCOUNTS = [
+  { label: 'User', email: 'user@test.com', password: 'user123' },
+  { label: 'Admin', email: 'admin@test.com', password: 'admin123' },
+];
+
+const checkEmail = (value) => {
+  if (!value.trim()) return 'Isi emailnya dulu ya.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Format emailnya belum pas.';
+  return '';
+};
+
+const describeError = (err, isLogin) => {
+  if (!err.response) return 'Server lagi tidak bisa dihubungi. Coba sebentar lagi.';
+  // Jangan sebut mana yang salah, email atau password
+  if (isLogin && err.response.status === 401) return 'Email atau password-nya belum cocok.';
+  return err.response.data?.error || 'Server lagi tidak bisa dihubungi. Coba sebentar lagi.';
+};
+
+// Arah lirikan saat mengetik: makin panjang teks, pupil makin ikut ke ujung kolom
+const lookAtText = (length, stacked) => {
+  const progress = Math.min(length / 28, 1);
+  return stacked
+    ? { x: -0.8 + progress * 1.6, y: 1 }
+    : { x: -1 + progress * 0.6, y: 0.2 + progress * 0.2 };
+};
+
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeField, setActiveField] = useState(null);
   const [errorCount, setErrorCount] = useState(0);
-  const [stacked, setStacked] = useState(false);
+  const [stacked, setStacked] = useState(() => window.matchMedia(STACKED_QUERY).matches);
+
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const usernameRef = useRef(null);
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
-  // Di layar kecil form ada di bawah wajah, di layar lebar form ada di kiri
+  // Di layar kecil panggung disembunyikan, wajah kecil pindah ke atas form
   useEffect(() => {
-    const query = window.matchMedia('(max-width: 900px)');
+    const query = window.matchMedia(STACKED_QUERY);
     const update = () => setStacked(query.matches);
-    update();
     query.addEventListener('change', update);
     return () => query.removeEventListener('change', update);
   }, []);
 
+  const clearErrors = () => {
+    setEmailError('');
+    setPasswordError('');
+    setUsernameError('');
+    setFormError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    if (loading) return;
+
+    const emailProblem = checkEmail(email);
+    const passwordProblem = password ? '' : 'Isi password-nya dulu ya.';
+    const usernameProblem = !isLogin && !username.trim() ? 'Isi username-nya dulu ya.' : '';
+    setEmailError(emailProblem);
+    setPasswordError(passwordProblem);
+    setUsernameError(usernameProblem);
+    setFormError('');
+
+    if (usernameProblem || emailProblem || passwordProblem) {
+      const firstInvalid = usernameProblem ? usernameRef : emailProblem ? emailRef : passwordRef;
+      firstInvalid.current?.focus();
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -98,7 +156,7 @@ const Login = () => {
         navigate('/user/home');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal terhubung ke server. Cek koneksi lalu coba lagi.');
+      setFormError(describeError(err, isLogin));
       setErrorCount((n) => n + 1);
     } finally {
       setLoading(false);
@@ -107,18 +165,34 @@ const Login = () => {
 
   const switchMode = () => {
     setIsLogin((value) => !value);
-    setError('');
+    clearErrors();
+  };
+
+  const fillTestAccount = (account) => {
+    setIsLogin(true);
+    setEmail(account.email);
+    setPassword(account.password);
+    clearErrors();
   };
 
   let mood = 'idle';
   if (loading) mood = 'busy';
   else if (activeField === 'password') mood = 'shy';
-  else if (error) mood = 'sad';
+  else if (formError) mood = 'sad';
   else if (activeField) mood = 'watching';
 
-  const fieldProps = (name) => ({
+  let lookDirection = stacked ? { x: 0, y: 1 } : { x: -1, y: 0.3 };
+  if (activeField === 'email') lookDirection = lookAtText(email.length, stacked);
+  else if (activeField === 'username') lookDirection = lookAtText(username.length, stacked);
+
+  const faceProps = { mood, shakeKey: errorCount, lookDirection };
+
+  const fieldProps = (name, onBlur) => ({
     onFocus: () => setActiveField(name),
-    onBlur: () => setActiveField(null),
+    onBlur: () => {
+      setActiveField(null);
+      onBlur?.();
+    },
   });
 
   return (
@@ -136,7 +210,13 @@ const Login = () => {
             </div>
           </header>
 
-          <form className="login-form" onSubmit={handleSubmit}>
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
+            {stacked && (
+              <div className="login-face-mini">
+                <FaceDots {...faceProps} />
+              </div>
+            )}
+
             <h2>{isLogin ? 'Selamat datang lagi' : 'Buat akunmu'}</h2>
             <p className="login-sub">
               {isLogin
@@ -144,52 +224,86 @@ const Login = () => {
                 : 'Setelah daftar, kamu bisa langsung scan wajah pertamamu.'}
             </p>
 
-            {error && <div className="error-message" role="alert">{error}</div>}
-
             {!isLogin && (
               <div className="form-group">
                 <label htmlFor="username">Username</label>
                 <input
+                  ref={usernameRef}
                   id="username"
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required={!isLogin}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setUsernameError('');
+                  }}
                   autoComplete="username"
+                  aria-invalid={Boolean(usernameError)}
+                  aria-describedby="username-error"
                   {...fieldProps('username')}
                 />
+                <p id="username-error" className="field-error" aria-live="polite">{usernameError}</p>
               </div>
             )}
 
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
+                ref={emailRef}
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError('');
+                }}
+                placeholder="adira@email.com"
                 autoComplete="email"
-                {...fieldProps('email')}
+                aria-invalid={Boolean(emailError)}
+                aria-describedby="email-error"
+                {...fieldProps('email', () => setEmailError(checkEmail(email)))}
               />
+              <p id="email-error" className="field-error" aria-live="polite">{emailError}</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
-                {...fieldProps('password')}
-              />
-              <p className="field-hint">Tenang, dia menutup mata.</p>
+              <div className="password-field">
+                <input
+                  ref={passwordRef}
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  aria-invalid={Boolean(passwordError)}
+                  aria-describedby="password-error"
+                  {...fieldProps('password')}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  aria-controls="password"
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+                  // Klik dengan mouse tidak memindahkan fokus dari kolom password
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? 'Sembunyikan' : 'Lihat'}
+                </button>
+              </div>
+              <p className={`field-hint${activeField === 'password' ? ' is-visible' : ''}`}>
+                Tenang, dia menutup mata.
+              </p>
+              <p id="password-error" className="field-error" aria-live="polite">{passwordError}</p>
             </div>
 
+            <p className="field-error form-error" aria-live="polite">{formError}</p>
+
             <button type="submit" className="btn-primary login-submit" disabled={loading}>
-              {loading ? 'Memproses…' : isLogin ? 'Masuk' : 'Buat akun'}
+              {loading ? (isLogin ? 'Memeriksa…' : 'Membuat akun…') : isLogin ? 'Masuk' : 'Buat akun'}
             </button>
 
             <p className="login-switch-inline">
@@ -200,37 +314,43 @@ const Login = () => {
             </p>
           </form>
 
-
           <footer className="login-footer">
             <span>© 2026 WajahKu</span>
-            <details className="test-accounts">
-              <summary>Akun uji</summary>
-              <p>user@test.com / user123</p>
-              <p>admin@test.com / admin123</p>
-            </details>
+            {import.meta.env.DEV && (
+              <div className="test-accounts">
+                <span>Akun uji:</span>
+                {TEST_ACCOUNTS.map((account) => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    className="link-button"
+                    onClick={() => fillTestAccount(account)}
+                  >
+                    {account.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </footer>
         </section>
 
-        <section className="login-stage">
-          <LogoMark className="login-brand stage-brand" />
-          <div className="stage-copy">
-            <h1>Kenali kulitmu dari satu foto.</h1>
-            <p>
-              WajahKu membaca jenis kulit dan masalah di dahi, pipi, dan dagu,
-              lalu menyusun rutinitas perawatan untukmu.
-            </p>
-          </div>
+        {!stacked && (
+          <section className="login-stage">
+            <div className="stage-copy">
+              <h1>Kenali kulitmu dari satu foto.</h1>
+              <p>
+                WajahKu membaca jenis kulit dan masalah di dahi, pipi, dan dagu,
+                lalu menyusun rutinitas perawatan untukmu.
+              </p>
+            </div>
 
-          <div className="stage-face">
-            <FaceDots
-              mood={mood}
-              shakeKey={errorCount}
-              lookDirection={stacked ? { x: 0, y: 1 } : { x: -1, y: 0.3 }}
-            />
-          </div>
+            <div className="stage-face">
+              <FaceDots {...faceProps} />
+            </div>
 
-          <AnalysisFeed />
-        </section>
+            <AnalysisFeed />
+          </section>
+        )}
       </div>
     </div>
   );
