@@ -1,127 +1,354 @@
+/* Beranda: panggung blush seperti halaman login, lalu scan terakhir dan ringkasan riwayat.
+   Breakpoint: HP <= 640px, tablet 641-1024px, desktop > 1024px (lihat index.css). */
 .user-home {
-  min-height: calc(100vh - 60px);
-}
-
-.hero {
-  background: linear-gradient(135deg, #2C3E50 0%, #3E5266 100%);
-  color: white;
-  padding: 68px 18px 72px;
-  text-align: center;
-}
-
-.hero h1 {
-  font-size: 38px;
-  margin-bottom: 16px;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.hero p {
-  font-size: 17px;
-  margin-bottom: 32px;
-  color: rgba(255, 255, 255, 0.9);
-  max-width: 580px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.btn-hero {
-  display: inline-block;
-  padding: 14px 32px;
-  background: #E8A87C;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 500;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-.btn-hero:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(232, 168, 124, 0.4);
-}
-
-.how-it-works {
-  padding: 64px 18px;
-  background: white;
-}
-
-.how-it-works h2 {
-  text-align: center;
-  font-size: 32px;
-  margin-bottom: 48px;
-  color: #2C3E50;
-  font-weight: 600;
-}
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 36px;
-  max-width: 960px;
+  max-width: calc(var(--container-width) + 2 * var(--gutter));
   margin: 0 auto;
+  padding: var(--space-5) var(--gutter) var(--space-7);
 }
 
-.step {
-  text-align: center;
-}
-
-.step-number {
-  width: 56px;
-  height: 56px;
-  background: #E8A87C;
-  color: white;
-  border-radius: 50%;
-  display: flex;
+/* Panggung: teks di kiri, maskot mengisi kolom kanan */
+.home-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
   align-items: center;
-  justify-content: center;
-  font-size: 24px;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 90% at 85% 100%, #EE9DB0 0%, rgba(238, 157, 176, 0) 70%),
+    linear-gradient(180deg, #FFF4F6 0%, var(--blush) 100%);
+}
+
+.home-stage-copy {
+  max-width: 60ch;
+}
+
+.home-greeting {
+  margin-bottom: var(--space-3);
   font-weight: 600;
-  margin: 0 auto 18px;
 }
 
-.step h3 {
-  font-size: 20px;
-  margin-bottom: 10px;
-  color: #2C3E50;
+.home-stage h1 {
+  max-width: 14ch;
+  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+  text-wrap: balance;
 }
 
-.step p {
-  color: #7F8C8D;
-  font-size: 15px;
-  line-height: 1.6;
+.home-lead {
+  max-width: 46ch;
+  margin-top: var(--space-3);
 }
 
-.features {
-  padding: 64px 18px;
-  background: #F5F7FA;
+.home-actions {
+  display: flex;
+  margin-top: var(--space-5);
 }
 
-.feature-grid {
+/* Selektor dua kelas menahan aturan .btn-primary lama dari Camera.css dan Results.css
+   yang masih global (flex: 1, geser dan bayangan oranye saat hover).
+   Hapus setelah halaman itu diredesain. */
+.home-actions .home-cta {
+  flex: none;
+  min-height: 50px;
+  padding: var(--space-2) var(--space-6);
+}
+
+.home-actions .btn-primary.home-cta:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.home-actions .btn-primary.home-cta:active {
+  transform: scale(0.98);
+}
+
+.home-face {
+  width: clamp(160px, 30vw, 420px);
+  max-width: 100%;
+  justify-self: center;
+}
+
+/* Pergantian mood maskot di beranda 150ms. Halaman login tetap 180ms. */
+.home-face .face-dots-eye,
+.home-face .face-dots-mouth {
+  transition-duration: 150ms;
+}
+
+/* Masuk sekali saat halaman dibuka: sapaan, headline, teks, tombol */
+.home-rise {
+  animation: home-rise 160ms ease-out both;
+  animation-delay: calc(var(--rise-order, 0) * 40ms);
+}
+
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Data riwayat: scan terakhir 2/3, ringkasan 1/3.
+   Placeholder dan kartu sama tinggi supaya pergantiannya tidak menggeser halaman. */
+.home-data {
+  --latest-height: 200px;
+  --summary-height: 200px;
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 28px;
-  max-width: 1000px;
-  margin: 0 auto;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  margin-top: var(--space-7);
 }
 
-.feature-card {
-  background: white;
-  padding: 28px 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+.home-data section {
+  display: flex;
+  flex-direction: column;
 }
 
-.feature-card h3 {
-  font-size: 18px;
-  margin-bottom: 10px;
-  color: #27AE60;
+.home-data h2 {
+  font-size: 2rem;
+  letter-spacing: -0.035em;
+}
+
+/* Placeholder dan kartu menempati sel grid yang sama */
+.home-data-main .data-slot {
+  --slot-height: var(--latest-height);
+}
+
+.home-data-side .data-slot {
+  --slot-height: var(--summary-height);
+}
+
+.data-slot {
+  display: grid;
+  flex: 1;
+  margin-top: var(--space-4);
+}
+
+.data-slot > * {
+  grid-area: 1 / 1;
+}
+
+.data-placeholder {
+  min-height: var(--slot-height);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: opacity 150ms ease-out;
+}
+
+.data-placeholder.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.data-enter {
+  animation: data-in 150ms ease-out both;
+}
+
+@keyframes data-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.data-card {
+  min-height: var(--slot-height);
+  padding: var(--space-5);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+/* Scan terakhir */
+.latest-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: center;
+  align-items: end;
+  gap: var(--space-4) var(--space-5);
+}
+
+.latest-date {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.latest-facts,
+.summary-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+}
+
+.latest-facts dt,
+.summary-facts dt {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.latest-facts dd,
+.summary-facts dd {
+  margin-top: var(--space-1);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Warna mark hanya untuk label masalah kulit */
+.latest-issues {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.latest-issues li {
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--mark-wash);
+  color: var(--mark);
+  font-size: var(--text-sm);
   font-weight: 600;
+  letter-spacing: 0;
 }
 
-.feature-card p {
-  color: #7F8C8D;
-  font-size: 15px;
-  line-height: 1.6;
+.latest-open,
+.summary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.latest-arrow {
+  display: inline-block;
+  transition: transform 150ms ease-out;
+}
+
+.latest-open:hover .latest-arrow,
+.latest-open:focus-visible .latest-arrow {
+  transform: translateX(2px);
+}
+
+/* Ringkasan */
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+
+/* Kosong dan gagal: kartu seukuran kartu data, latar surface, rata kiri */
+.data-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-4);
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+
+.home-retry {
+  min-height: 44px;
+  padding: 0 var(--space-5);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  font-weight: 600;
+  color: var(--ink);
+  transition: background-color 150ms ease-out;
+}
+
+.home-retry:hover {
+  background: var(--surface);
+}
+
+.home-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Disclaimer selebar container */
+.home-note {
+  margin-top: var(--space-7);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+/* Tablet: panggung tetap 2 kolom dengan maskot lebih kecil, data ditumpuk */
+@media (max-width: 1024px) {
+  .home-stage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 260px);
+    gap: var(--space-5);
+  }
+
+  .home-data {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* HP: satu kolom, maskot kecil di atas sapaan */
+@media (max-width: 640px) {
+  .user-home {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-6);
+  }
+
+  .home-stage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .home-face {
+    order: -1;
+    width: 140px;
+    justify-self: start;
+  }
+
+  .home-stage h1 {
+    font-size: clamp(2.25rem, 9vw, 4.5rem);
+  }
+
+  .home-actions .home-cta {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .home-data,
+  .home-note {
+    margin-top: var(--space-6);
+  }
+
+  /* Di HP kartu scan terakhir lebih tinggi karena label masalah turun baris */
+  .home-data {
+    --latest-height: 320px;
+  }
+
+  .latest-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-rise,
+  .data-enter {
+    animation: none;
+  }
+
+  .home-actions .btn-primary.home-cta:active,
+  .latest-open:hover .latest-arrow,
+  .latest-open:focus-visible .latest-arrow {
+    transform: none;
+  }
 }

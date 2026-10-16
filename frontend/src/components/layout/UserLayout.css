@@ -1,92 +1,130 @@
+/* Navigasi user: putih datar, satu garis di bawah. Di HP menu pindah ke bar bawah
+   supaya tombol scan mudah dijangkau jempol. */
 .user-layout {
   min-height: 100vh;
-  background: #F5F7FA;
+  background: var(--paper);
+}
+
+html {
+  scroll-padding-top: var(--header-height);
 }
 
 .user-navbar {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 0;
   z-index: 100;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
 }
 
 .navbar-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 18px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 60px;
+  gap: var(--space-6);
+  max-width: calc(var(--container-width) + 2 * var(--gutter));
+  height: var(--header-height);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
 }
 
 .nav-logo {
-  font-size: 20px;
-  font-weight: 600;
-  color: #2C3E50;
+  color: var(--ink);
   text-decoration: none;
 }
 
 .nav-links {
   display: flex;
-  gap: 28px;
+  gap: var(--space-2);
 }
 
-.nav-links a {
-  color: #7F8C8D;
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--ink-soft);
   text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  transition: color 200ms ease;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
 }
 
-.nav-links a:hover,
-.nav-links a.active {
-  color: #E8A87C;
+.nav-link:hover {
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.nav-link.is-active {
+  color: var(--paper);
+  background: var(--ink);
 }
 
 .nav-user {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3);
+  min-width: 0;
+  margin-left: auto;
 }
 
-.nav-user span {
-  font-size: 14px;
-  color: #7F8C8D;
+/* Nama panjang (misalnya username dari email) dipotong, nama lengkap ada di title */
+.nav-username {
+  max-width: 20ch;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.btn-logout {
-  padding: 8px 16px;
-  background: #FFF5F5;
-  color: #C53030;
-  border: 1px solid #FED7D7;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 200ms ease;
+.user-logout {
+  flex: none;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background-color 150ms ease-out;
 }
 
-.btn-logout:hover {
-  opacity: 0.8;
+.user-logout:hover {
+  background: var(--surface);
 }
 
-.user-content {
-  min-height: calc(100vh - 60px);
-}
+@media (max-width: 640px) {
+  html {
+    scroll-padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom));
+  }
 
-@media (max-width: 768px) {
   .nav-links {
-    gap: 16px;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    align-items: center;
+    height: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom));
+    padding: 0 max(var(--space-3), env(safe-area-inset-right)) env(safe-area-inset-bottom)
+      max(var(--space-3), env(safe-area-inset-left));
+    background: var(--paper);
+    border-top: 1px solid var(--line);
   }
-  
-  .nav-links a {
-    font-size: 14px;
+
+  .nav-link {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
   }
-  
-  .nav-user span {
+
+  .nav-username {
     display: none;
+  }
+
+  .user-content {
+    padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom));
   }
 }

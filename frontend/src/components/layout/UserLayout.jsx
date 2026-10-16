@@ -1,6 +1,13 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import LogoMark from '../common/LogoMark';
 import './UserLayout.css';
+
+const NAV_ITEMS = [
+  { to: '/user/home', label: 'Beranda' },
+  { to: '/user/camera', label: 'Scan wajah' },
+  { to: '/user/history', label: 'Riwayat' },
+];
 
 const UserLayout = () => {
   const { user, logout } = useAuth();
@@ -13,29 +20,35 @@ const UserLayout = () => {
 
   return (
     <div className="user-layout">
-      <nav className="user-navbar">
+      <header className="user-navbar">
         <div className="navbar-container">
-          <Link to="/user/home" className="nav-logo">
-            WajahKu.id
+          <Link to="/user/home" className="nav-logo" aria-label="WajahKu, ke beranda">
+            <LogoMark />
           </Link>
-          
-          <div className="nav-links">
-            <Link to="/user/home">Beranda</Link>
-            <Link to="/user/camera">Scan Wajah</Link>
-            <Link to="/user/history">Riwayat</Link>
-          </div>
+
+          <nav className="nav-links" aria-label="Menu utama">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => `nav-link${isActive ? ' is-active' : ''}`}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
 
           <div className="nav-user">
-            <span>{user?.email}</span>
-            <button onClick={handleLogout} className="btn-logout">
+            <span className="nav-username" title={user?.username}>{user?.username}</span>
+            <button type="button" onClick={handleLogout} className="user-logout">
               Keluar
             </button>
           </div>
         </div>
-      </nav>
+      </header>
 
       <main className="user-content">
-        <Outlet />
+        <Outlet context={{ user }} />
       </main>
     </div>
   );
