@@ -1,6 +1,6 @@
 """Latih Model A (jenis kulit: dry / normal / oily / combination) dari dua dataset Roboflow di datasets/.
 
-Jalankan: C:/wjx/Scripts/python train_skin_type.py
+Jalankan: C:/wjx/Scripts/python -m ml.train_skin_type
 Hasil: models/skin_type.onnx + models/skin_type_report.txt
 """
 import glob, hashlib, os, random, re
@@ -17,7 +17,7 @@ from torchvision import models, transforms as T
 
 from services.face import crop_face
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # root repo, skrip ini ada di ml/
 SRC_DIRS = [os.path.join(ROOT, 'datasets', d) for d in ('Oily-Dry-Skin-Types', 'skin_type_classification_dataset')]
 CACHE = os.path.join(ROOT, 'datasets', '_cache_skin_type')
 OUT = os.path.join(ROOT, 'models')

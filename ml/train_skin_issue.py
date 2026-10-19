@@ -2,7 +2,7 @@
 
 - acne, blackheads, dark spots, pores: close-up dari datasets/Skin v2 (wrinkles dibuang: isinya potret lansia utuh).
 - normal: potongan area wajah (services.face.face_regions) dari foto berlabel 'normal' di dataset jenis kulit.
-Jalankan: C:/wjx/Scripts/python train_skin_issue.py  (butuh cache dari train_skin_type.py)
+Jalankan: C:/wjx/Scripts/python -m ml.train_skin_issue  (butuh cache dari train_skin_type.py)
 """
 import glob, os, random, re
 from collections import defaultdict
@@ -10,7 +10,7 @@ from collections import defaultdict
 from PIL import Image
 from torchvision import transforms as T
 
-import train_skin_type as base
+from ml import train_skin_type as base
 from services.face import face_regions
 
 SKIN_V2 = os.path.join(base.ROOT, 'datasets', 'Skin v2')

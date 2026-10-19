@@ -6,7 +6,7 @@ Ultralytics YOLO berlisensi AGPL-3.0: hanya dipakai saat training, aplikasi cuku
 
 Satu salinan per foto asli (Roboflow menyimpan foto yang sama di beberapa split), dibagi ulang 80/10/10
 per foto asli. Foto yang dilabeli tapi tanpa kotak jerawat ikut sebagai contoh negatif.
-Jalankan: C:/wjx/Scripts/python train_acne_yolo.py
+Jalankan: C:/wjx/Scripts/python -m ml.train_acne_yolo
 Hasil: models/acne_yolo.onnx, models/acne_yolo.json (ambang), models/acne_yolo_report.txt
 """
 import json, os, random, shutil
@@ -17,9 +17,9 @@ from PIL import Image
 from scipy.stats import spearmanr
 from sklearn.metrics import roc_auc_score
 
-from train_skin_issue_v2 import SRC, read_xlsx, source_id
+from ml.train_skin_issue_v2 import SRC, read_xlsx, source_id
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # root repo, skrip ini ada di ml/
 WORK = os.path.join(ROOT, 'datasets', '_yolo_acne')
 OUT = os.path.join(ROOT, 'models')
 SEED, IMGSZ = 42, 640

@@ -6,7 +6,7 @@ Dataset: Parin Kittipongdaja, Roboflow Universe, CC BY 4.0
 Patch dibuat dari foto yang sama: area yang bertanda kotak = positif, area tanpa kotak = negatif,
 supaya model tidak bisa menebak dari gaya foto (masalah Model B v1). Foto berwajah dipotong per area
 dengan REGIONS_V2 (sama dengan aplikasi); close-up tanpa wajah terdeteksi dipotong per kuadran.
-Jalankan: C:/wjx/Scripts/python train_skin_issue_v2.py
+Jalankan: C:/wjx/Scripts/python -m ml.train_skin_issue_v2
 Hasil: models/skin_issue_v2.onnx, models/skin_issue_v2.json (kelas + ambang), models/skin_issue_v2_report.txt
 """
 import csv, hashlib, json, os, random, re, zipfile
@@ -22,9 +22,9 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import models, transforms as T
 
 from services.face import REGIONS_V2, crop_face, face_box, face_regions
-from train_skin_issue import low_res
+from ml.train_skin_issue import low_res
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # root repo, skrip ini ada di ml/
 SRC = os.path.join(ROOT, 'datasets', 'Skin-Problem-Detection-Relabel-Clean3.v2i.coco')
 CACHE = os.path.join(ROOT, 'datasets', '_cache_issue_v2')
 OUT = os.path.join(ROOT, 'models')

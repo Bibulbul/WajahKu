@@ -2,7 +2,7 @@
 
 Label wajah = kelas yang ada di salah satu dari 7 patch-nya. Ambang dipilih di wajah validasi (F1 terbaik),
 lalu dinilai di wajah test. Hasil ditambahkan ke models/skin_issue_v2.json ("face_thresholds") dan laporan.
-Jalankan: C:/wjx/Scripts/python tune_face_thresholds_v2.py   (setelah train_skin_issue_v2.py)
+Jalankan: C:/wjx/Scripts/python -m ml.tune_face_thresholds_v2   (setelah ml.train_skin_issue_v2)
 """
 import json, os
 from collections import defaultdict
@@ -13,7 +13,7 @@ from PIL import Image
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 from services.face import REGIONS_V2
-from train_skin_issue_v2 import CLASSES, OUT, build_cache, split
+from ml.train_skin_issue_v2 import CLASSES, OUT, build_cache, split
 
 cfg_path = os.path.join(OUT, 'skin_issue_v2.json')
 cfg = json.load(open(cfg_path, encoding='utf-8'))
