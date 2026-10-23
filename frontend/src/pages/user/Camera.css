@@ -1,324 +1,362 @@
+/* Halaman kamera: lapang, dua aksi di kiri, maskot di panel blush kanan yang melirik
+   ke tombol yang disorot. Breakpoint: HP <= 640px, tablet 641-1024px (lihat index.css). */
 .camera-page {
-  min-height: calc(100vh - 60px);
-  padding: 36px 18px;
+  max-width: calc(var(--container-width) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: var(--space-5) var(--gutter) var(--space-7);
 }
 
-.camera-header {
-  text-align: center;
-  margin-bottom: 36px;
+/* Results.css (belum diredesain) masih memberi .btn-primary/.btn-secondary global
+   flex: 1, ukuran font 15px, dan geser + bayangan oranye saat hover. Ditahan di sini. */
+.camera-page :is(.btn-primary, .btn-secondary) {
+  flex: none;
+  font-size: var(--text-base);
 }
 
-.camera-header h1 {
-  font-size: 32px;
-  color: #2C3E50;
-  margin-bottom: 8px;
-  font-weight: 600;
+.camera-page :is(.btn-primary, .btn-secondary):hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
 }
 
-.camera-header p {
-  color: #7F8C8D;
-  font-size: 16px;
+.camera-page .btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
-.camera-container {
-  max-width: 640px;
-  margin: 0 auto 48px;
-  background: white;
-  border-radius: 8px;
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  position: relative;
-}
-
-/* CAMERA OPTIONS (CHOOSE MODE) */
-.choose-area {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* Mode pilih */
+.camera-choose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  grid-template-areas:
+    'copy stage'
+    'tips stage';
   align-items: center;
+  gap: var(--space-5) var(--space-7);
 }
 
-@media (min-width: 600px) {
-  .choose-area {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: stretch;
-  }
+.camera-copy {
+  grid-area: copy;
+  max-width: 60ch;
 }
 
-.option-card {
-  flex: 1;
-  width: 100%;
-  border: 2px dashed #D1D8DD;
-  border-radius: 12px;
-  padding: 40px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.camera-copy h1 {
+  max-width: 12ch;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  text-wrap: balance;
+}
+
+.camera-lead {
+  max-width: 46ch;
+  margin-top: var(--space-4);
+}
+
+.camera-options {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 
-.option-card:hover {
-  border-color: #E8A87C;
-  background: #FFF9F5;
-  transform: translateY(-2px);
+.camera-option {
+  min-height: 52px;
+  padding: var(--space-2) var(--space-6);
 }
 
-.icon-box {
-  width: 64px;
-  height: 64px;
-  background: #F5F7FA;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  color: #2C3E50;
-  transition: background 0.2s ease;
+.camera-file-input {
+  display: none;
 }
 
-.option-card:hover .icon-box {
-  background: white;
-  color: #E8A87C;
+.camera-hint {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
 }
 
-.option-card h3 {
-  font-size: 18px;
-  color: #2C3E50;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.option-card p {
-  font-size: 14px;
-  color: #7F8C8D;
-  line-height: 1.4;
-}
-
-.option-divider {
-  display: flex;
-  align-items: center;
-  color: #A0AAB2;
-  font-size: 14px;
+.camera-error {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
   font-weight: 500;
-  text-transform: uppercase;
+  color: var(--mark);
 }
 
-/* LIVE WEBCAM MODE */
-.webcam-area {
+.camera-error:empty {
+  margin-top: 0;
+}
+
+.camera-stage {
+  grid-area: stage;
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  min-height: 420px;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 90% at 50% 100%, #EE9DB0 0%, rgba(238, 157, 176, 0) 70%),
+    linear-gradient(180deg, #FFF4F6 0%, var(--blush) 100%);
+}
+
+.camera-face {
+  width: clamp(160px, 24vw, 300px);
+}
+
+/* Pergantian lirikan dan mood 150ms, sama dengan beranda */
+.camera-page .face-dots-eye,
+.camera-page .face-dots-mouth {
+  transition-duration: 150ms;
+}
+
+.camera-tips {
+  grid-area: tips;
+  align-self: end;
+  max-width: 60ch;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+/* Mode kamera langsung */
+.camera-live {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  gap: var(--space-5);
 }
 
-.video-wrapper {
-  width: 100%;
-  max-height: 480px;
-  background: #111;
-  border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.video-frame {
   position: relative;
-}
-
-.video-wrapper video {
   width: 100%;
-  height: auto;
-  max-height: 480px;
-  object-fit: cover;
+  max-width: 760px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--ink);
 }
 
-.video-wrapper video.mirror {
-  transform: scaleX(-1);
-}
-
-.webcam-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-}
-
-.btn-capture {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: white;
-  border: 4px solid #E8A87C;
-  padding: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.1s ease;
-}
-
-.btn-capture:active {
-  transform: scale(0.95);
-}
-
-.capture-circle {
+.video-frame video {
   display: block;
   width: 100%;
   height: 100%;
-  background: #E8A87C;
-  border-radius: 50%;
-  transition: background 0.2s ease;
+  object-fit: cover;
 }
 
-.btn-capture:hover .capture-circle {
-  background: #d69568;
+.video-frame video.mirror {
+  transform: scaleX(-1);
 }
 
-.btn-icon-only {
-  padding: 12px;
-  display: flex;
+/* Oval panduan dari titik putih, ukuran titik tetap walau bingkai berubah */
+.face-guide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.face-guide ellipse {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 0.01 12;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.9;
+}
+
+.video-hint {
+  position: absolute;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--paper);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.live-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 760px;
 }
 
-.preview-area {
+.live-side {
+  min-height: 44px;
+}
+
+.live-controls .live-side:first-child {
+  justify-self: start;
+}
+
+.live-controls .live-side:last-child {
+  justify-self: end;
+}
+
+.btn-capture {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  transition: transform 100ms ease-out;
+}
+
+.btn-capture:active {
+  transform: scale(0.96);
+}
+
+.capture-dot {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: background-color 150ms ease-out;
+}
+
+.btn-capture:hover .capture-dot {
+  background: #2B2B2B;
+}
+
+.camera-live .camera-error {
   text-align: center;
 }
 
-.preview-area img {
-  max-width: 100%;
-  max-height: 420px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+/* Mode pratinjau */
+.camera-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  align-items: center;
+  gap: var(--space-7);
+}
+
+.camera-preview img {
+  display: block;
+  width: 100%;
+  max-height: 560px;
   object-fit: contain;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.preview-face {
+  width: 112px;
+  margin-bottom: var(--space-5);
+}
+
+.preview-status h1 {
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  text-wrap: balance;
+}
+
+.preview-status p {
+  margin-top: var(--space-3);
+  color: var(--ink-soft);
 }
 
 .preview-actions {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
 
-.btn-secondary {
-  padding: 11px 24px;
-  background: white;
-  color: #2C3E50;
-  border: 1px solid #D1D8DD;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 500;
-  transition: background 200ms ease;
+/* Tablet: maskot lebih kecil */
+@media (max-width: 1024px) {
+  .camera-choose {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+    column-gap: var(--space-6);
+  }
+
+  .camera-stage {
+    min-height: 320px;
+  }
+
+  .camera-preview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+    gap: var(--space-6);
+  }
 }
 
-.btn-secondary:hover {
-  background: #F5F7FA;
+/* HP: satu kolom, maskot di atas, tombol selebar penuh */
+@media (max-width: 640px) {
+  .camera-page {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-6);
+  }
+
+  .camera-choose {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'stage'
+      'copy'
+      'tips';
+    gap: var(--space-5);
+  }
+
+  .camera-stage {
+    min-height: 0;
+    padding: var(--space-5);
+  }
+
+  .camera-face {
+    width: 140px;
+  }
+
+  .camera-copy h1 {
+    font-size: clamp(2.25rem, 9vw, 4.5rem);
+  }
+
+  .camera-options {
+    flex-direction: column;
+    margin-top: var(--space-5);
+  }
+
+  .camera-option {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .video-frame {
+    aspect-ratio: 3 / 4;
+  }
+
+  .live-controls {
+    gap: var(--space-3);
+  }
+
+  .camera-page .live-side {
+    padding: 0 var(--space-3);
+    font-size: var(--text-sm);
+  }
+
+  .camera-preview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .camera-preview img {
+    max-height: 60vh;
+  }
+
+  .preview-face {
+    display: none;
+  }
+
+  .preview-actions {
+    flex-direction: column;
+  }
 }
 
-.btn-primary {
-  padding: 11px 24px;
-  background: #E8A87C;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 500;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(232, 168, 124, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background: #FFF5F5;
-  color: #C53030;
-  padding: 11px 14px;
-  border-radius: 6px;
-  margin-top: 18px;
-  font-size: 14px;
-  border: 1px solid #FED7D7;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #F5F7FA;
-  border-top-color: #E8A87C;
-  border-radius: 50%;
-  animation: spin 800ms linear infinite;
-  margin-bottom: 18px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-overlay p {
-  font-size: 16px;
-  color: #2C3E50;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-
-.loading-overlay small {
-  color: #7F8C8D;
-  font-size: 13px;
-}
-
-.tips {
-  max-width: 640px;
-  margin: 0 auto;
-  background: white;
-  padding: 28px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.tips h3 {
-  font-size: 18px;
-  color: #2C3E50;
-  margin-bottom: 14px;
-  font-weight: 600;
-}
-
-.tips ul {
-  list-style: none;
-  padding: 0;
-}
-
-.tips li {
-  padding: 8px 0;
-  color: #7F8C8D;
-  font-size: 15px;
-  padding-left: 24px;
-  position: relative;
-}
-
-.tips li::before {
-  content: '•';
-  position: absolute;
-  left: 8px;
-  color: #E8A87C;
-  font-size: 18px;
+@media (prefers-reduced-motion: reduce) {
+  .camera-page .btn-primary:active:not(:disabled),
+  .btn-capture:active {
+    transform: none;
+  }
 }

@@ -1,7 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import FaceDots from '../../components/common/FaceDots';
 import './Camera.css';
+
+const STACKED_QUERY = '(max-width: 640px)';
+
+// Arah lirikan maskot ke tombol yang sedang disorot. Di HP maskot ada di atas tombol.
+const LOOK = {
+  camera: { wide: { x: -1, y: 0.1 }, stacked: { x: -0.3, y: 1 } },
+  upload: { wide: { x: -1, y: 0.6 }, stacked: { x: -0.3, y: 1 } },
+};
 
 const Camera = () => {
   const [mode, setMode] = useState('choose'); // 'choose', 'webcam', 'preview'
@@ -9,13 +18,28 @@ const Camera = () => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorCount, setErrorCount] = useState(0);
   const [facingMode, setFacingMode] = useState('user'); // 'user' (depan) atau 'environment' (belakang)
+  const [hovered, setHovered] = useState(null);
+  const [stacked, setStacked] = useState(() => window.matchMedia(STACKED_QUERY).matches);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const streamRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const query = window.matchMedia(STACKED_QUERY);
+    const update = () => setStacked(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  const showError = (message) => {
+    setError(message);
+    setErrorCount((n) => n + 1);
+  };
 
   // Matikan stream kamera ketika unmount atau ganti mode
   const stopCameraStream = () => {
@@ -35,6 +59,7 @@ const Camera = () => {
   const startCamera = async (facing = facingMode) => {
     stopCameraStream();
     setError('');
+    setHovered(null);
     setMode('webcam');
 
     try {
@@ -53,7 +78,7 @@ const Camera = () => {
       }
     } catch (err) {
       console.error('Kamera Error:', err);
-      setError('Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.');
+      showError('Kamera tidak bisa dibuka. Izinkan akses kamera di browser, atau unggah foto saja.');
       setMode('choose');
     }
   };
@@ -87,7 +112,7 @@ const Camera = () => {
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          setError('Gagal mengambil gambar dari kamera.');
+          showError('Foto dari kamera gagal diambil. Coba sekali lagi.');
           return;
         }
         const file = new File([blob], `scan-${Date.now()}.jpg`, { type: 'image/jpeg' });
@@ -107,20 +132,23 @@ const Camera = () => {
   // Handle upload dari file lokal
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
+    // Kosongkan supaya memilih file yang sama lagi tetap memicu onChange
+    e.target.value = '';
     if (!file) return;
 
     if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
-      setError('Format file tidak didukung. Gunakan JPG, JPEG, atau PNG');
+      showError('Formatnya belum didukung. Pakai foto JPG atau PNG.');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Ukuran file terlalu besar. Maksimal 5MB');
+      showError('Ukuran foto lebih dari 5MB. Pilih foto yang lebih kecil.');
       return;
     }
 
     setSelectedFile(file);
     setError('');
+    setHovered(null);
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -149,7 +177,8 @@ const Camera = () => {
 
       navigate(`/user/results/${data.scan_id}`);
     } catch (err) {
-      setError(err.response?.data?.error || 'Terjadi kesalahan saat mengunggah foto');
+      // Pesan dari backend sudah spesifik, misalnya "Wajah tidak terdeteksi..."
+      showError(err.response?.data?.error || 'Server lagi tidak bisa dihubungi. Coba sebentar lagi.');
       setLoading(false);
     }
   };
@@ -163,125 +192,161 @@ const Camera = () => {
     setMode('choose');
   };
 
+  const hoverProps = (name) => ({
+    onMouseEnter: () => setHovered(name),
+    onMouseLeave: () => setHovered(null),
+    onFocus: () => setHovered(name),
+    onBlur: () => setHovered(null),
+  });
+
+  let mood = 'idle';
+  if (loading) mood = 'busy';
+  else if (error) mood = 'sad';
+  else if (hovered) mood = 'watching';
+
+  const lookDirection = hovered
+    ? LOOK[hovered][stacked ? 'stacked' : 'wide']
+    : { x: stacked ? 0 : -1, y: stacked ? 1 : 0.3 };
+
+  const errorMessage = (
+    <p className="camera-error" aria-live="polite">
+      {error}
+    </p>
+  );
+
   return (
     <div className="camera-page">
-      <div className="container">
-        <div className="camera-header">
-          <h1>Pemindaian Wajah</h1>
-          <p>Ambil foto langsung melalui kamera atau unggah dari perangkat</p>
-        </div>
+      {/* MODE 1: PILIH CARA */}
+      {mode === 'choose' && (
+        <section className="camera-choose">
+          <div className="camera-copy">
+            <h1>Ambil foto wajahmu.</h1>
+            <p className="camera-lead">
+              Pakai kamera sekarang atau pilih foto dari galeri. Hasil analisis muncul beberapa
+              detik setelah foto dikirim.
+            </p>
 
-        <div className="camera-container">
-          {/* MODES 1: OPSI PILIHAN */}
-          {mode === 'choose' && (
-            <div className="choose-area">
-              <div className="option-card" onClick={() => startCamera('user')}>
-                <div className="icon-box">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
-                </div>
-                <h3>Buka Kamera</h3>
-                <p>Ambil foto wajah secara langsung</p>
-              </div>
-
-              <div className="option-divider">atau</div>
-
-              <div className="option-card" onClick={() => fileInputRef.current?.click()}>
-                <div className="icon-box">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                  </svg>
-                </div>
-                <h3>Unggah Foto</h3>
-                <p>Pilih file dari galeri atau komputer (JPG, PNG)</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png"
-                  onChange={handleFileSelect}
-                  style={{ display: 'none' }}
-                />
-              </div>
+            <div className="camera-options">
+              <button
+                type="button"
+                className="btn-primary camera-option"
+                onClick={() => startCamera('user')}
+                {...hoverProps('camera')}
+              >
+                Buka kamera
+              </button>
+              <button
+                type="button"
+                className="btn-secondary camera-option"
+                onClick={() => fileInputRef.current?.click()}
+                {...hoverProps('upload')}
+              >
+                Unggah foto
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={handleFileSelect}
+                className="camera-file-input"
+                tabIndex={-1}
+                aria-hidden="true"
+              />
             </div>
-          )}
+            <p className="camera-hint">JPG atau PNG, maksimal 5MB.</p>
 
-          {/* MODE 2: LIVE WEBCAM */}
-          {mode === 'webcam' && (
-            <div className="webcam-area">
-              <div className="video-wrapper">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className={facingMode === 'user' ? 'mirror' : ''}
-                />
-                <canvas ref={canvasRef} style={{ display: 'none' }} />
-              </div>
+            {errorMessage}
+          </div>
 
-              <div className="webcam-controls">
-                <button type="button" onClick={resetAll} className="btn-secondary">
-                  Batal
-                </button>
-
-                <button type="button" onClick={capturePhoto} className="btn-capture">
-                  <span className="capture-circle"></span>
-                </button>
-
-                <button type="button" onClick={toggleFacingMode} className="btn-secondary btn-icon-only" title="Ganti Kamera">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <polyline points="1 20 1 14 7 14"></polyline>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                  </svg>
-                </button>
-              </div>
+          <div className="camera-stage">
+            <div className="camera-face">
+              <FaceDots mood={mood} shakeKey={errorCount} lookDirection={lookDirection} />
             </div>
-          )}
+          </div>
 
-          {/* MODE 3: PREVIEW FOTO */}
-          {mode === 'preview' && preview && (
-            <div className="preview-area">
-              <img src={preview} alt="Preview Wajah" />
-              <div className="preview-actions">
-                <button onClick={resetAll} className="btn-secondary">
-                  Ganti Foto
-                </button>
-                <button
-                  onClick={handleUpload}
-                  disabled={loading}
-                  className="btn-primary"
-                >
-                  {loading ? 'Menganalisis...' : 'Analisis Sekarang'}
-                </button>
+          <p className="camera-tips">
+            Biar hasilnya akurat: pakai cahaya alami yang merata, lepas makeup dan filter, lalu
+            hadapkan seluruh wajah ke kamera.
+          </p>
+        </section>
+      )}
+
+      {/* MODE 2: KAMERA LANGSUNG */}
+      {mode === 'webcam' && (
+        <section className="camera-live" aria-label="Kamera">
+          <div className="video-frame">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={facingMode === 'user' ? 'mirror' : ''}
+              aria-label="Tampilan kamera"
+            />
+            {/* Panduan posisi wajah: oval dari titik, seperti maskot */}
+            <svg className="face-guide" viewBox="0 0 100 100" aria-hidden="true">
+              <ellipse cx="50" cy="47" rx="29" ry="39" />
+            </svg>
+            <p className="video-hint">Posisikan wajah di dalam oval</p>
+            <canvas ref={canvasRef} hidden />
+          </div>
+
+          <div className="live-controls">
+            <button type="button" onClick={resetAll} className="btn-secondary live-side">
+              Batal
+            </button>
+            <button type="button" onClick={capturePhoto} className="btn-capture" aria-label="Ambil foto">
+              <span className="capture-dot" />
+            </button>
+            <button type="button" onClick={toggleFacingMode} className="btn-secondary live-side">
+              Ganti kamera
+            </button>
+          </div>
+
+          {errorMessage}
+        </section>
+      )}
+
+      {/* MODE 3: PRATINJAU */}
+      {mode === 'preview' && preview && (
+        <section className="camera-preview">
+          <img src={preview} alt="Pratinjau foto wajah yang akan dianalisis" />
+
+          <div className="preview-side">
+            <div className="preview-face">
+              <FaceDots mood={mood} shakeKey={errorCount} lookDirection={{ x: stacked ? 0 : -1, y: 0.4 }} />
+            </div>
+
+            {loading ? (
+              <div className="preview-status" role="status">
+                <h1>Menganalisis fotomu…</h1>
+                <p>Biasanya hanya beberapa detik. Jangan tutup halaman ini.</p>
               </div>
+            ) : (
+              <div className="preview-status">
+                <h1>Sudah pas?</h1>
+                <p>Pastikan seluruh wajah terlihat jelas dan tidak buram.</p>
+              </div>
+            )}
+
+            <div className="preview-actions">
+              <button
+                type="button"
+                onClick={handleUpload}
+                disabled={loading}
+                className="btn-primary camera-option"
+              >
+                {loading ? 'Menganalisis…' : 'Analisis foto'}
+              </button>
+              <button type="button" onClick={resetAll} disabled={loading} className="btn-secondary camera-option">
+                Ganti foto
+              </button>
             </div>
-          )}
 
-          {error && <div className="error-message">{error}</div>}
-
-          {loading && (
-            <div className="loading-overlay">
-              <div className="spinner"></div>
-              <p>Sistem sedang memproses foto Anda...</p>
-              <small>Proses ini membutuhkan beberapa detik</small>
-            </div>
-          )}
-        </div>
-
-        <div className="tips">
-          <h3>Tips Foto Terbaik</h3>
-          <ul>
-            <li>Gunakan pencahayaan yang cukup dan merata</li>
-            <li>Pastikan seluruh wajah terlihat jelas tanpa terhalang</li>
-            <li>Hindari penggunaan filter atau pengeditan gambar</li>
-            <li>Posisikan wajah tepat di tengah area foto</li>
-          </ul>
-        </div>
-      </div>
+            {errorMessage}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

@@ -44,8 +44,8 @@
   margin-top: var(--space-5);
 }
 
-/* Selektor dua kelas menahan aturan .btn-primary lama dari Camera.css dan Results.css
-   yang masih global (flex: 1, geser dan bayangan oranye saat hover).
+/* Selektor dua kelas menahan aturan .btn-primary lama dari Results.css dan
+   ProductManagement.css yang masih global (flex: 1, geser dan bayangan oranye saat hover).
    Hapus setelah halaman itu diredesain. */
 .home-actions .home-cta {
   flex: none;
