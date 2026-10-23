@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
@@ -17,6 +17,81 @@ const orderConditions = (conditions) => {
 };
 
 const STACKED_QUERY = '(max-width: 640px)';
+
+const shortLabel = (key, condition) => SKIN_TYPES[key] ?? SKIN_ISSUES[key] ?? condition.name;
+
+// Langkah perawatan per kondisi. Lebih dari satu kondisi dipisah per tab
+// (pola tablist WAI-ARIA: panah kiri/kanan, Home, End).
+const Routines = ({ groups }) => {
+  const [active, setActive] = useState(0);
+  const tabRefs = useRef([]);
+
+  const select = (index) => {
+    const next = (index + groups.length) % groups.length;
+    setActive(next);
+    tabRefs.current[next]?.focus();
+  };
+
+  const onKeyDown = (e) => {
+    const keys = { ArrowRight: active + 1, ArrowLeft: active - 1, Home: 0, End: groups.length - 1 };
+    if (e.key in keys) {
+      e.preventDefault();
+      select(keys[e.key]);
+    }
+  };
+
+  const steps = (group) => (
+    <ol className="routine-steps">
+      {group.steps.map((step) => (
+        <li key={step.step_number}>
+          <span className="routine-number" aria-hidden="true">{step.step_number}</span>
+          <div>
+            <h3>{step.step_title}</h3>
+            <p>{step.step_description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+
+  if (groups.length === 1) return steps(groups[0]);
+
+  return (
+    <>
+      <div className="routine-tabs" role="tablist" aria-label="Kondisi kulit">
+        {groups.map((group, index) => (
+          <button
+            key={group.key}
+            ref={(el) => (tabRefs.current[index] = el)}
+            type="button"
+            role="tab"
+            id={`routine-tab-${group.key}`}
+            aria-selected={index === active}
+            aria-controls={`routine-panel-${group.key}`}
+            tabIndex={index === active ? 0 : -1}
+            className="routine-tab"
+            onClick={() => setActive(index)}
+            onKeyDown={onKeyDown}
+          >
+            {group.label}
+          </button>
+        ))}
+      </div>
+      {groups.map((group, index) => (
+        <div
+          key={group.key}
+          role="tabpanel"
+          id={`routine-panel-${group.key}`}
+          aria-labelledby={`routine-tab-${group.key}`}
+          hidden={index !== active}
+          className="routine-panel"
+        >
+          {steps(group)}
+        </div>
+      ))}
+    </>
+  );
+};
 
 const Results = () => {
   const { scanId } = useParams();
@@ -100,9 +175,12 @@ const Results = () => {
     );
   }
 
-  const { scan, conditions } = data;
+  const { scan, conditions, recommendations } = data;
   const date = parseScanDate(scan.scan_date);
   const { type, issues, all } = orderConditions(conditions);
+  const routineGroups = all
+    .filter(([key]) => recommendations?.[key]?.length)
+    .map(([key, condition]) => ({ key, label: shortLabel(key, condition), steps: recommendations[key] }));
   const typeTitle = type
     ? type[0] === 'jenis_belum_pasti'
       ? 'Jenis kulit belum pasti'
@@ -156,6 +234,16 @@ const Results = () => {
           })}
         </ul>
       </section>
+
+      {routineGroups.length > 0 && (
+        <section className="results-section" aria-labelledby="results-routine-title">
+          <h2 id="results-routine-title">Yang harus kamu lakukan</h2>
+          <p className="results-section-lead">
+            Langkah perawatan untuk tiap kondisi, berurutan dari yang dipakai lebih dulu.
+          </p>
+          <Routines groups={routineGroups} />
+        </section>
+      )}
 
       <div className="results-actions results-footer-actions">
         <Link to="/user/camera" className="btn-primary results-button">Scan lagi</Link>
