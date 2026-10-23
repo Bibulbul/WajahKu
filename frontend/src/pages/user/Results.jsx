@@ -18,6 +18,40 @@ const orderConditions = (conditions) => {
 
 const STACKED_QUERY = '(max-width: 640px)';
 
+// Kategori produk di database masih bahasa Inggris
+const CATEGORIES = {
+  cleanser: 'Pembersih',
+  exfoliant: 'Eksfoliator',
+  mask: 'Masker',
+  moisturizer: 'Pelembap',
+  serum: 'Serum',
+  sunscreen: 'Tabir surya',
+  toner: 'Toner',
+};
+
+const formatPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
+
+const ProductCard = ({ product }) => (
+  <li className="product-card">
+    <span className="product-category">{CATEGORIES[product.category] ?? product.category}</span>
+    <h3>{product.name}</h3>
+    <p className="product-brand">{product.brand}</p>
+    <p className="product-price">{formatPrice.format(product.price)}</p>
+    <div className="product-meta">
+      <span className="product-bpom">BPOM {product.bpom_number}</span>
+      {product.review_count > 0 ? (
+        <span className="product-rating">
+          <span aria-hidden="true">★ </span>
+          {product.avg_rating.toLocaleString('id-ID', { maximumFractionDigits: 1 })} dari 5
+          <span className="product-reviews"> ({product.review_count} ulasan)</span>
+        </span>
+      ) : (
+        <span className="product-rating product-reviews">Belum ada ulasan</span>
+      )}
+    </div>
+  </li>
+);
+
 const shortLabel = (key, condition) => SKIN_TYPES[key] ?? SKIN_ISSUES[key] ?? condition.name;
 
 // Langkah perawatan per kondisi. Lebih dari satu kondisi dipisah per tab
@@ -175,7 +209,7 @@ const Results = () => {
     );
   }
 
-  const { scan, conditions, recommendations } = data;
+  const { scan, conditions, recommendations, products } = data;
   const date = parseScanDate(scan.scan_date);
   const { type, issues, all } = orderConditions(conditions);
   const routineGroups = all
@@ -242,6 +276,22 @@ const Results = () => {
             Langkah perawatan untuk tiap kondisi, berurutan dari yang dipakai lebih dulu.
           </p>
           <Routines groups={routineGroups} />
+        </section>
+      )}
+
+      {products?.length > 0 && (
+        <section className="results-section results-products" aria-labelledby="results-products-title">
+          <h2 id="results-products-title">Produk terdaftar BPOM</h2>
+          {/* Backend memilih produk secara acak, belum berdasarkan hasil scan */}
+          <p className="results-section-lead products-note">
+            Contoh produk dari katalog WajahKu. Produk ini belum dipilih berdasarkan hasil scanmu,
+            jadi cek kandungannya dulu sebelum membeli.
+          </p>
+          <ul className="product-list" tabIndex={0} aria-label="Daftar produk, bisa digeser">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </ul>
         </section>
       )}
 

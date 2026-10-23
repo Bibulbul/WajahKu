@@ -204,6 +204,66 @@
   color: var(--ink-soft);
 }
 
+/* Produk: grid di desktop, baris geser dengan snap di HP */
+.product-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.product-category {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.product-card h3 {
+  margin-top: var(--space-2);
+  font-size: 1.125rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.product-brand {
+  color: var(--ink-soft);
+}
+
+.product-price {
+  margin-top: var(--space-3);
+  font-weight: 700;
+}
+
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.product-bpom {
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.product-reviews {
+  color: var(--ink-soft);
+}
+
 .results-actions {
   display: flex;
   flex-wrap: wrap;
@@ -253,6 +313,10 @@
 }
 
 @media (max-width: 1024px) {
+  .product-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .results-summary,
   .results-loading {
     grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
@@ -284,6 +348,20 @@
   .results-section,
   .results-footer-actions {
     margin-top: var(--space-6);
+  }
+
+  .product-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    gap: var(--space-3);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--space-2);
+  }
+
+  .product-card {
+    scroll-snap-align: start;
   }
 
   .results-actions {
