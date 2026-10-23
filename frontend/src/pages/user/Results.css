@@ -264,6 +264,25 @@
   color: var(--ink-soft);
 }
 
+/* Catatan dokter: blok surface di antara kondisi dan perawatan */
+.results-doctor {
+  max-width: 72ch;
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.results-doctor h2 {
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.results-doctor p {
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+}
+
 .results-actions {
   display: flex;
   flex-wrap: wrap;

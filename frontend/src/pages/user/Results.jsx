@@ -269,6 +269,15 @@ const Results = () => {
         </ul>
       </section>
 
+      {/* Dibaca sebelum langkah perawatan dan produk */}
+      <aside className="results-doctor" aria-labelledby="results-doctor-title">
+        <h2 id="results-doctor-title">Ini perkiraan AI, bukan diagnosis dokter.</h2>
+        <p>
+          Kalau kulitmu meradang, terasa nyeri, atau tidak membaik setelah beberapa minggu
+          perawatan, konsultasikan ke dokter kulit.
+        </p>
+      </aside>
+
       {routineGroups.length > 0 && (
         <section className="results-section" aria-labelledby="results-routine-title">
           <h2 id="results-routine-title">Yang harus kamu lakukan</h2>
