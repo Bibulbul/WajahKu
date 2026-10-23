@@ -1,13 +1,37 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
+import FaceDots from '../../components/common/FaceDots';
+import { SKIN_ISSUES, SKIN_TYPES, formatRelative, parseScanDate } from '../../constants/skin';
 import './Results.css';
+
+// Jenis kulit dulu, lalu masalah kulit dari keyakinan AI tertinggi. Angkanya tidak
+// ditampilkan supaya tidak terbaca sebagai tingkat kebenaran.
+const orderConditions = (conditions) => {
+  const entries = Object.entries(conditions);
+  const types = entries.filter(([key]) => key in SKIN_TYPES);
+  const issues = entries
+    .filter(([key]) => !(key in SKIN_TYPES))
+    .sort((a, b) => b[1].confidence - a[1].confidence);
+  return { type: types[0] ?? null, issues, all: [...types, ...issues] };
+};
+
+const STACKED_QUERY = '(max-width: 640px)';
 
 const Results = () => {
   const { scanId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [stacked, setStacked] = useState(() => window.matchMedia(STACKED_QUERY).matches);
+
+  // Maskot melirik ke foto: di kiri saat desktop, di atas saat HP
+  useEffect(() => {
+    const query = window.matchMedia(STACKED_QUERY);
+    const update = () => setStacked(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     fetchResults();
@@ -18,104 +42,124 @@ const Results = () => {
     try {
       const { data: result } = await api.get(`/scans/${scanId}`);
       setData(result);
-    } catch {
-      setError('Gagal memuat hasil scan');
+    } catch (err) {
+      setError(err.response?.status === 404 ? 'not-found' : 'failed');
     } finally {
       setLoading(false);
     }
   };
 
+  const retry = () => {
+    setLoading(true);
+    setError('');
+    fetchResults();
+  };
+
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Memuat hasil...</p>
+      <div className="results-page">
+        <div className="results-loading" role="status">
+          <div className="results-loading-photo" />
+          <div className="results-loading-text">
+            <div className="results-face">
+              <FaceDots mood="busy" />
+            </div>
+            <p>Memuat hasil scan…</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !data) {
+    const notFound = error === 'not-found';
     return (
-      <div className="error-container">
-        <p>{error || 'Data tidak ditemukan'}</p>
-        <Link to="/user/home" className="btn-primary">Kembali ke Beranda</Link>
+      <div className="results-page">
+        <div className="results-message">
+          <div className="results-face">
+            <FaceDots mood="sad" />
+          </div>
+          <h1>{notFound ? 'Scan ini tidak ditemukan.' : 'Hasil scan belum bisa dimuat.'}</h1>
+          <p>
+            {notFound
+              ? 'Mungkin scan sudah tidak ada atau bukan milik akunmu.'
+              : 'Periksa koneksi lalu coba lagi.'}
+          </p>
+          <div className="results-actions">
+            {notFound ? (
+              <Link to="/user/history" className="btn-primary results-button">Lihat riwayat</Link>
+            ) : (
+              <button type="button" className="btn-primary results-button" onClick={retry}>
+                Coba lagi
+              </button>
+            )}
+            <Link to="/user/home" className="btn-secondary results-button">Kembali ke beranda</Link>
+          </div>
+        </div>
       </div>
     );
   }
 
+  const { scan, conditions } = data;
+  const date = parseScanDate(scan.scan_date);
+  const { type, issues, all } = orderConditions(conditions);
+  const typeTitle = type
+    ? type[0] === 'jenis_belum_pasti'
+      ? 'Jenis kulit belum pasti'
+      : `Kulit ${SKIN_TYPES[type[0]].toLowerCase()}`
+    : 'Hasil scan';
+
   return (
     <div className="results-page">
-      <div className="container">
-        <div className="results-header">
-          <h1>Hasil Analisis Kulit</h1>
-          <p>Berikut adalah hasil analisis kondisi kulit wajah Anda</p>
-        </div>
+      <section className="results-summary">
+        <img className="results-photo" src={`/${scan.photo_path}`} alt="Foto wajah yang dianalisis" />
 
-        <div className="results-grid">
-          <div className="photo-section">
-            <img src={`/${data.scan.photo_path}`} alt="Scan" />
-            <small>Scan pada: {new Date(data.scan.scan_date).toLocaleString('id-ID')}</small>
+        <div className="results-summary-text">
+          <div className="results-face">
+            <FaceDots mood="watching" lookDirection={stacked ? { x: 0, y: -1 } : { x: -1, y: 0.2 }} />
           </div>
-
-          <div className="conditions-section">
-            <h2>Kondisi Terdeteksi</h2>
-            {Object.entries(data.conditions).map(([key, condition]) => (
-              <div key={key} className="condition-card">
-                <div className="condition-header">
-                  <h3>{condition.name}</h3>
-                  <span className="confidence">{condition.confidence}%</span>
-                </div>
-                <p>{condition.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="recommendations-section">
-          <h2>Rekomendasi Perawatan</h2>
-          {Object.entries(data.recommendations).map(([condition, steps]) => (
-            <div key={condition} className="recommendation-group">
-              <h3>{data.conditions[condition].name}</h3>
-              <div className="steps-list">
-                {steps.map((step) => (
-                  <div key={step.step_number} className="step-card">
-                    <div className="step-num">{step.step_number}</div>
-                    <div className="step-content">
-                      <h4>{step.step_title}</h4>
-                      <p>{step.step_description}</p>
-                    </div>
-                  </div>
+          <time
+            className="results-date"
+            dateTime={date.toISOString()}
+            title={date.toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}
+          >
+            Scan {formatRelative(date)}
+          </time>
+          <h1>{typeTitle}</h1>
+          {issues.length ? (
+            <>
+              <p className="results-lead">Yang perlu diperhatikan:</p>
+              <ul className="results-issues">
+                {issues.map(([key, condition]) => (
+                  <li key={key}>{SKIN_ISSUES[key] ?? condition.name}</li>
                 ))}
-              </div>
-            </div>
-          ))}
+              </ul>
+            </>
+          ) : (
+            <p className="results-lead">Tidak ada masalah kulit yang terdeteksi di foto ini.</p>
+          )}
         </div>
+      </section>
 
-        {data.products && data.products.length > 0 && (
-          <div className="products-section">
-            <h2>Produk Rekomendasi</h2>
-            <div className="products-grid">
-              {data.products.map((product) => (
-                <div key={product.id} className="product-card">
-                  <h3>{product.name}</h3>
-                  <p className="brand">{product.brand}</p>
-                  <p className="price">Rp {product.price.toLocaleString('id-ID')}</p>
-                  <div className="product-meta">
-                    <span className="bpom">BPOM {product.bpom_number}</span>
-                    {product.avg_rating > 0 && (
-                      <span className="rating">★ {product.avg_rating.toFixed(1)}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <section className="results-section" aria-labelledby="results-conditions-title">
+        <h2 id="results-conditions-title">Kondisi kulitmu</h2>
+        <ul className="condition-list">
+          {all.map(([key, condition]) => {
+            const isType = key in SKIN_TYPES;
+            return (
+              <li key={key} className={`condition-card${isType ? '' : ' is-issue'}`}>
+                <span className="condition-kind">{isType ? 'Jenis kulit' : 'Masalah kulit'}</span>
+                <h3>{condition.name}</h3>
+                <p>{condition.description}</p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
-        <div className="actions">
-          <Link to="/user/camera" className="btn-secondary">Scan Lagi</Link>
-          <Link to="/user/history" className="btn-primary">Lihat Riwayat</Link>
-        </div>
+      <div className="results-actions results-footer-actions">
+        <Link to="/user/camera" className="btn-primary results-button">Scan lagi</Link>
+        <Link to="/user/history" className="btn-secondary results-button">Lihat riwayat</Link>
       </div>
     </div>
   );
