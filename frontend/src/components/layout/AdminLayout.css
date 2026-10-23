@@ -1,108 +1,157 @@
+/* Admin: sidebar putih bergaris di desktop, bilah atas di HP.
+   Breakpoint: HP <= 640px, tablet 641-1024px (lihat index.css). */
 .admin-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
   min-height: 100vh;
-  background: #F5F7FA;
+  background: var(--paper);
 }
 
 .admin-sidebar {
-  width: 240px;
-  background: #2C3E50;
-  color: white;
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  height: 100vh;
+  padding: var(--space-5) var(--space-4);
+  border-right: 1px solid var(--line);
 }
 
-.sidebar-header {
-  padding: 22px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.sidebar-header h2 {
-  font-size: 18px;
+.admin-badge {
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  background: var(--blush);
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
-.sidebar-nav {
-  padding: 18px 0;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  transition: background 200ms ease, color 200ms ease;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-}
-
-.nav-item span {
-  font-size: 18px;
-}
-
-.admin-main {
-  flex: 1;
+.admin-nav {
   display: flex;
   flex-direction: column;
+  gap: var(--space-1);
 }
 
-.admin-topbar {
-  height: 60px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+.admin-nav-link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
 }
 
-.breadcrumbs span {
-  font-size: 14px;
-  color: #7F8C8D;
-  font-weight: 500;
+.admin-nav-link:hover {
+  color: var(--ink);
+  background: var(--surface);
 }
 
-.topbar-actions {
+.admin-nav-link.is-active {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.admin-account {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: auto;
 }
 
-.topbar-actions span {
-  font-size: 14px;
-  color: #7F8C8D;
+.admin-email {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.btn-logout {
-  padding: 8px 16px;
-  background: #FFF5F5;
-  color: #C53030;
-  border: 1px solid #FED7D7;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 200ms ease;
+.admin-logout {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background-color 150ms ease-out;
 }
 
-.btn-logout:hover {
-  opacity: 0.8;
+.admin-logout:hover {
+  background: var(--surface);
 }
 
 .admin-content {
-  flex: 1;
-  overflow-y: auto;
+  min-width: 0;
+  padding: var(--space-6) var(--gutter) var(--space-7);
 }
 
+/* Tablet: sidebar lebih ramping */
 @media (max-width: 1024px) {
+  .admin-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+}
+
+/* HP: bilah atas berisi logo dan Keluar, menu di baris bawahnya */
+@media (max-width: 640px) {
+  .admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .admin-sidebar {
-    width: 200px;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'brand account'
+      'nav nav';
+    gap: var(--space-3);
+    height: auto;
+    padding: var(--space-3) var(--gutter);
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .admin-brand {
+    grid-area: brand;
+  }
+
+  .admin-account {
+    grid-area: account;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 0;
+  }
+
+  .admin-email {
+    display: none;
+  }
+
+  .admin-nav {
+    grid-area: nav;
+    flex-direction: row;
+  }
+
+  .admin-nav-link {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .admin-content {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-6);
   }
 }

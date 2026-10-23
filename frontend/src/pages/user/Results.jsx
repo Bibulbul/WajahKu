@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
 import { SKIN_ISSUES, SKIN_TYPES, formatRelative, parseScanDate } from '../../constants/skin';
+import { CATEGORIES, formatPrice } from '../../constants/products';
 import './Results.css';
 
 // Jenis kulit dulu, lalu masalah kulit dari keyakinan AI tertinggi. Angkanya tidak
@@ -17,19 +18,6 @@ const orderConditions = (conditions) => {
 };
 
 const STACKED_QUERY = '(max-width: 640px)';
-
-// Kategori produk di database masih bahasa Inggris
-const CATEGORIES = {
-  cleanser: 'Pembersih',
-  exfoliant: 'Eksfoliator',
-  mask: 'Masker',
-  moisturizer: 'Pelembap',
-  serum: 'Serum',
-  sunscreen: 'Tabir surya',
-  toner: 'Toner',
-};
-
-const formatPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
 const ProductCard = ({ product }) => (
   <li className="product-card">

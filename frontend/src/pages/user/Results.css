@@ -6,22 +6,6 @@
   padding: var(--space-5) var(--gutter) var(--space-7);
 }
 
-/* ProductManagement.css (belum diredesain) masih memberi .btn-primary global
-   geser dan warna lain saat hover. Ditahan di sini. */
-.results-page :is(.btn-primary, .btn-secondary) {
-  flex: none;
-  font-size: var(--text-base);
-}
-
-.results-page :is(.btn-primary, .btn-secondary):hover:not(:disabled) {
-  transform: none;
-  box-shadow: none;
-}
-
-.results-page .btn-primary:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
 .results-button {
   min-height: 48px;
   padding: var(--space-2) var(--space-6);
@@ -389,11 +373,5 @@
 
   .results-button {
     width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .results-page .btn-primary:active:not(:disabled) {
-    transform: none;
   }
 }

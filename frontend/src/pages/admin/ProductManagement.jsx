@@ -1,21 +1,28 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useId, useState, useCallback } from 'react';
 import api from '../../services/api';
 import Modal from '../../components/common/Modal';
+import { CATEGORIES, formatPrice } from '../../constants/products';
 import './ProductManagement.css';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  // { type: 'form', product } untuk tambah/edit, { type: 'delete', product } untuk hapus
+  const [dialog, setDialog] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [dialogError, setDialogError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const fetchProducts = useCallback(async () => {
     try {
       const { data } = await api.get('/admin/products');
       setProducts(data);
+      setLoadError(false);
     } catch (err) {
       console.error('Error fetching products:', err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -25,119 +32,198 @@ const ProductManagement = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-    setShowModal(true);
+  const openDialog = (next) => {
+    setDialog(next);
+    setDialogError('');
+    setNotice('');
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Yakin ingin menghapus produk ini?')) return;
+  const closeDialog = () => {
+    if (!busy) setDialog(null);
+  };
 
+  const handleDelete = async (product) => {
+    setBusy(true);
     try {
-      await api.delete(`/admin/products/${id}`);
+      await api.delete(`/admin/products/${product.id}`);
+      setDialog(null);
+      setNotice(`"${product.name}" dihapus.`);
       fetchProducts();
-    } catch {
-      alert('Gagal menghapus produk');
+    } catch (err) {
+      setDialogError(err.response?.data?.error || 'Produk belum bisa dihapus. Coba lagi.');
+    } finally {
+      setBusy(false);
     }
   };
 
   const handleSubmit = async (formData) => {
+    const editing = dialog?.product;
+    setBusy(true);
+    setDialogError('');
     try {
-      if (editingProduct) {
-        await api.put(`/admin/products/${editingProduct.id}`, formData);
+      if (editing) {
+        await api.put(`/admin/products/${editing.id}`, formData);
       } else {
         await api.post('/admin/products', formData);
       }
-      setShowModal(false);
-      setEditingProduct(null);
+      setDialog(null);
+      setNotice(editing ? `"${formData.name}" diperbarui.` : `"${formData.name}" ditambahkan.`);
       fetchProducts();
-    } catch {
-      alert('Gagal menyimpan produk');
+    } catch (err) {
+      setDialogError(err.response?.data?.error || 'Produk belum bisa disimpan. Coba lagi.');
+    } finally {
+      setBusy(false);
     }
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.brand.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const retry = () => {
+    setLoading(true);
+    fetchProducts();
+  };
 
-  if (loading) {
-    return <div className="loading-container"><div className="spinner"></div></div>;
-  }
+  const query = searchTerm.trim().toLowerCase();
+  const filteredProducts = products.filter(
+    (p) => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+  );
 
   return (
     <div className="product-management">
-      <div className="page-header">
-        <h1>Manajemen Produk</h1>
-        <button
-          onClick={() => {
-            setEditingProduct(null);
-            setShowModal(true);
-          }}
-          className="btn-primary"
-        >
-          + Tambah Produk
+      <header className="pm-header">
+        <div>
+          <h1>Produk</h1>
+          {!loading && !loadError && <p className="pm-count">{products.length} produk di katalog</p>}
+        </div>
+        <button type="button" onClick={() => openDialog({ type: 'form', product: null })} className="btn-primary pm-button">
+          Tambah produk
         </button>
-      </div>
+      </header>
 
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Cari produk..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      <p className="pm-notice" aria-live="polite">{notice}</p>
 
-      <div className="products-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Nama Produk</th>
-              <th>Brand</th>
-              <th>Kategori</th>
-              <th>Harga</th>
-              <th>BPOM</th>
-              <th>Review</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product.id}>
-                <td><strong>{product.name}</strong></td>
-                <td>{product.brand}</td>
-                <td>{product.category}</td>
-                <td>Rp {product.price.toLocaleString('id-ID')}</td>
-                <td><span className="bpom-badge">{product.bpom_number}</span></td>
-                <td>{product.review_count} review</td>
-                <td>
-                  <div className="action-buttons">
-                    <button onClick={() => handleEdit(product)} className="btn-edit">Edit</button>
-                    <button onClick={() => handleDelete(product.id)} className="btn-delete">Hapus</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {loading && (
+        <div className="pm-placeholder" role="status">
+          <span className="pm-sr-only">Memuat produk…</span>
+        </div>
+      )}
 
-      {showModal && (
+      {!loading && loadError && (
+        <div className="pm-message">
+          <p>Daftar produk belum bisa dimuat. Periksa koneksi lalu coba lagi.</p>
+          <button type="button" className="btn-secondary pm-button" onClick={retry}>Coba lagi</button>
+        </div>
+      )}
+
+      {!loading && !loadError && (
+        <>
+          <div className="pm-search">
+            <label htmlFor="pm-search" className="pm-sr-only">Cari produk</label>
+            <input
+              id="pm-search"
+              type="search"
+              placeholder="Cari nama atau merek"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {filteredProducts.length === 0 ? (
+            <p className="pm-empty">
+              {products.length === 0
+                ? 'Belum ada produk. Tambahkan produk pertama.'
+                : `Tidak ada produk yang cocok dengan "${searchTerm.trim()}".`}
+            </p>
+          ) : (
+            <div className="pm-table-wrap" tabIndex={0} role="region" aria-label="Tabel produk, bisa digeser">
+              <table className="pm-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Produk</th>
+                    <th scope="col">Kategori</th>
+                    <th scope="col" className="is-number">Harga</th>
+                    <th scope="col">BPOM</th>
+                    <th scope="col" className="is-number">Ulasan</th>
+                    <th scope="col"><span className="pm-sr-only">Aksi</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((product) => (
+                    <tr key={product.id}>
+                      <td>
+                        <strong>{product.name}</strong>
+                        <span className="pm-brand">{product.brand}</span>
+                      </td>
+                      <td>{CATEGORIES[product.category] ?? product.category}</td>
+                      <td className="is-number">{formatPrice.format(product.price)}</td>
+                      <td><span className="pm-bpom">{product.bpom_number}</span></td>
+                      <td className="is-number">{product.review_count}</td>
+                      <td>
+                        <div className="pm-actions">
+                          <button
+                            type="button"
+                            onClick={() => openDialog({ type: 'form', product })}
+                            className="pm-action"
+                            aria-label={`Edit ${product.name}`}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openDialog({ type: 'delete', product })}
+                            className="pm-action is-danger"
+                            aria-label={`Hapus ${product.name}`}
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {dialog?.type === 'form' && (
         <ProductModal
-          product={editingProduct}
-          onClose={() => {
-            setShowModal(false);
-            setEditingProduct(null);
-          }}
+          product={dialog.product}
+          busy={busy}
+          error={dialogError}
+          onClose={closeDialog}
           onSubmit={handleSubmit}
         />
+      )}
+
+      {dialog?.type === 'delete' && (
+        <Modal title="Hapus produk?" onClose={closeDialog}>
+          <p className="pm-dialog-text">
+            &ldquo;{dialog.product.name}&rdquo;
+            {dialog.product.review_count > 0 && ` beserta ${dialog.product.review_count} ulasannya`} akan
+            dihapus permanen dan tidak bisa dikembalikan.
+          </p>
+          <p className="pm-dialog-error" aria-live="polite">{dialogError}</p>
+          <div className="pm-dialog-actions">
+            <button type="button" onClick={closeDialog} className="btn-secondary pm-button" disabled={busy}>
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDelete(dialog.product)}
+              className="pm-button pm-danger"
+              disabled={busy}
+            >
+              {busy ? 'Menghapus…' : 'Hapus produk'}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
 };
 
-const ProductModal = ({ product, onClose, onSubmit }) => {
+const ProductModal = ({ product, busy, error, onClose, onSubmit }) => {
+  const id = useId();
   const [formData, setFormData] = useState({
     name: product?.name || '',
     brand: product?.brand || '',
@@ -157,94 +243,62 @@ const ProductModal = ({ product, onClose, onSubmit }) => {
     onSubmit(formData);
   };
 
+  const field = (name) => ({ id: `${id}-${name}`, name, value: formData[name], onChange: handleChange });
+
   return (
-    <Modal onClose={onClose}>
-      <h2>{product ? 'Edit Produk' : 'Tambah Produk'}</h2>
-      <form onSubmit={handleSubmit}>
+    <Modal title={product ? 'Edit produk' : 'Tambah produk'} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="pm-form">
         <div className="form-group">
-          <label>Nama Produk</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          <label htmlFor={`${id}-name`}>Nama produk</label>
+          <input type="text" required {...field('name')} />
+        </div>
+
+        <div className="pm-form-row">
+          <div className="form-group">
+            <label htmlFor={`${id}-brand`}>Merek</label>
+            <input type="text" required {...field('brand')} />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`${id}-category`}>Kategori</label>
+            <select required {...field('category')}>
+              {Object.entries(CATEGORIES).map(([value, text]) => (
+                <option key={value} value={value}>{text}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="form-group">
-          <label>Brand</label>
-          <input
-            type="text"
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            required
-          />
+          <label htmlFor={`${id}-description`}>Deskripsi</label>
+          <textarea rows="3" required {...field('description')} />
+        </div>
+
+        <div className="pm-form-row">
+          <div className="form-group">
+            <label htmlFor={`${id}-price`}>Harga (Rp)</label>
+            <input type="number" min="0" inputMode="numeric" required {...field('price')} />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`${id}-bpom_number`}>Nomor BPOM</label>
+            <input type="text" required {...field('bpom_number')} />
+          </div>
         </div>
 
         <div className="form-group">
-          <label>Kategori</label>
-          <select name="category" value={formData.category} onChange={handleChange} required>
-            <option value="cleanser">Cleanser</option>
-            <option value="toner">Toner</option>
-            <option value="serum">Serum</option>
-            <option value="moisturizer">Moisturizer</option>
-            <option value="sunscreen">Sunscreen</option>
-            <option value="mask">Mask</option>
-            <option value="exfoliant">Exfoliant</option>
-          </select>
+          <label htmlFor={`${id}-active_ingredients`}>Bahan aktif (opsional)</label>
+          <input type="text" placeholder="Misalnya Niacinamide, Centella" {...field('active_ingredients')} />
         </div>
 
-        <div className="form-group">
-          <label>Deskripsi</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows="3"
-            required
-          />
-        </div>
+        <p className="pm-dialog-error" aria-live="polite">{error}</p>
 
-        <div className="form-group">
-          <label>Harga</label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Nomor BPOM</label>
-          <input
-            type="text"
-            name="bpom_number"
-            value={formData.bpom_number}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Bahan Aktif</label>
-          <input
-            type="text"
-            name="active_ingredients"
-            value={formData.active_ingredients}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="modal-actions">
-          <button type="button" onClick={onClose} className="btn-secondary">
+        <div className="pm-dialog-actions">
+          <button type="button" onClick={onClose} className="btn-secondary pm-button" disabled={busy}>
             Batal
           </button>
-          <button type="submit" className="btn-primary">
-            Simpan
+          <button type="submit" className="btn-primary pm-button" disabled={busy}>
+            {busy ? 'Menyimpan…' : 'Simpan produk'}
           </button>
         </div>
       </form>

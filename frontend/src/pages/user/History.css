@@ -6,22 +6,6 @@
   padding: var(--space-5) var(--gutter) var(--space-7);
 }
 
-/* ProductManagement.css (belum diredesain) masih memberi .btn-primary global
-   geser saat hover. Ditahan di sini. */
-.history-page :is(.btn-primary, .btn-secondary) {
-  flex: none;
-  font-size: var(--text-base);
-}
-
-.history-page :is(.btn-primary, .btn-secondary):hover:not(:disabled) {
-  transform: none;
-  box-shadow: none;
-}
-
-.history-page .btn-primary:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
 .history-header {
   display: flex;
   flex-wrap: wrap;
@@ -205,11 +189,5 @@
 
   .history-open {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .history-page .btn-primary:active:not(:disabled) {
-    transform: none;
   }
 }

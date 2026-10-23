@@ -44,22 +44,9 @@
   margin-top: var(--space-5);
 }
 
-/* Selektor dua kelas menahan aturan .btn-primary lama dari Results.css dan
-   ProductManagement.css yang masih global (flex: 1, geser dan bayangan oranye saat hover).
-   Hapus setelah halaman itu diredesain. */
 .home-actions .home-cta {
-  flex: none;
   min-height: 50px;
   padding: var(--space-2) var(--space-6);
-}
-
-.home-actions .btn-primary.home-cta:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.home-actions .btn-primary.home-cta:active {
-  transform: scale(0.98);
 }
 
 .home-face {
@@ -346,7 +333,6 @@
     animation: none;
   }
 
-  .home-actions .btn-primary.home-cta:active,
   .latest-open:hover .latest-arrow,
   .latest-open:focus-visible .latest-arrow {
     transform: none;

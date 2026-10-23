@@ -6,22 +6,6 @@
   padding: var(--space-5) var(--gutter) var(--space-7);
 }
 
-/* Results.css (belum diredesain) masih memberi .btn-primary/.btn-secondary global
-   flex: 1, ukuran font 15px, dan geser + bayangan oranye saat hover. Ditahan di sini. */
-.camera-page :is(.btn-primary, .btn-secondary) {
-  flex: none;
-  font-size: var(--text-base);
-}
-
-.camera-page :is(.btn-primary, .btn-secondary):hover:not(:disabled) {
-  transform: none;
-  box-shadow: none;
-}
-
-.camera-page .btn-primary:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
 /* Mode pilih */
 .camera-choose {
   display: grid;
@@ -331,7 +315,7 @@
     gap: var(--space-3);
   }
 
-  .camera-page .live-side {
+  .live-side {
     padding: 0 var(--space-3);
     font-size: var(--text-sm);
   }
@@ -355,7 +339,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .camera-page .btn-primary:active:not(:disabled),
   .btn-capture:active {
     transform: none;
   }
