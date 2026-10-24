@@ -27,6 +27,7 @@ const Camera = () => {
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const streamRef = useRef(null);
+  const cameraRequest = useRef(0); // naik tiap kamera dimatikan; stream yang datang terlambat langsung dimatikan
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,6 +44,7 @@ const Camera = () => {
 
   // Matikan stream kamera ketika unmount atau ganti mode
   const stopCameraStream = () => {
+    cameraRequest.current += 1;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -58,6 +60,7 @@ const Camera = () => {
   // Jalankan webcam
   const startCamera = async (facing = facingMode) => {
     stopCameraStream();
+    const request = cameraRequest.current;
     setError('');
     setHovered(null);
     setMode('webcam');
@@ -72,11 +75,18 @@ const Camera = () => {
         audio: false,
       });
 
+      if (request !== cameraRequest.current) {
+        // Sudah ada permintaan kamera yang lebih baru (tombol ditekan cepat) atau halaman ditinggal
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
       }
     } catch (err) {
+      if (request !== cameraRequest.current) return;
       console.error('Kamera Error:', err);
       showError('Kamera tidak bisa dibuka. Izinkan akses kamera di browser, atau unggah foto saja.');
       setMode('choose');
