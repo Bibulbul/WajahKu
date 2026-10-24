@@ -149,3 +149,11 @@ INSERT INTO skincare_routines (condition_type, step_number, step_title, step_des
 ('normal', 2, 'Moisturizer ringan', 'Jaga keseimbangan kelembaban dengan pelembab bertekstur lotion atau gel-cream.'),
 ('normal', 3, 'Sunscreen setiap pagi', 'Gunakan SPF 30+ untuk mencegah flek dan penuaan dini.'),
 ('normal', 4, 'Antioksidan (opsional)', 'Serum vitamin C atau niacinamide membantu menjaga kulit tetap cerah dan sehat.');
+
+INSERT INTO skincare_routines (condition_type, step_number, step_title, step_description) VALUES
+-- Kantung mata
+('kantung_mata', 1, 'Tidur cukup dan teratur', 'Kurang tidur membuat cairan menumpuk di bawah mata. Usahakan tidur 7 sampai 8 jam.'),
+('kantung_mata', 2, 'Kurangi garam di malam hari', 'Asupan garam tinggi memicu retensi cairan sehingga area bawah mata tampak bengkak di pagi hari.'),
+('kantung_mata', 3, 'Kompres dingin di pagi hari', 'Kompres dingin selama beberapa menit membantu mengurangi bengkak sementara.'),
+('kantung_mata', 4, 'Eye cream dengan kafein atau peptide', 'Oleskan tipis dengan jari manis, tepuk lembut tanpa menarik kulit di sekitar mata.'),
+('kantung_mata', 5, 'Sunscreen sampai area bawah mata', 'Paparan UV mempercepat kulit di sekitar mata kehilangan elastisitas.');
