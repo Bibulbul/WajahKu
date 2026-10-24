@@ -6,6 +6,22 @@
   padding: var(--space-5) var(--gutter) var(--space-7);
 }
 
+/* ProductManagement.css (belum diredesain) masih memberi .btn-primary global
+   geser dan warna lain saat hover. Ditahan di sini. */
+.results-page :is(.btn-primary, .btn-secondary) {
+  flex: none;
+  font-size: var(--text-base);
+}
+
+.results-page :is(.btn-primary, .btn-secondary):hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.results-page .btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .results-button {
   min-height: 48px;
   padding: var(--space-2) var(--space-6);
@@ -31,6 +47,48 @@
   object-fit: cover;
   border-radius: 20px;
   background: var(--surface);
+}
+
+/* Tanda jerawat: lapisan SVG di atas foto dengan potongan yang sama (slice = cover) */
+.results-photo-wrap {
+  position: relative;
+}
+
+.acne-marks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.acne-marks ellipse {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 1px var(--paper));
+}
+
+.acne-toggle {
+  min-height: 44px;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-1);
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.acne-toggle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .results-date {
@@ -115,6 +173,11 @@
 .condition-card p {
   margin-top: var(--space-2);
   color: var(--ink-soft);
+}
+
+.condition-card .condition-note {
+  color: var(--ink);
+  font-weight: 600;
 }
 
 /* Langkah perawatan: tab per kondisi, langkah bernomor karena memang berurutan */
@@ -373,5 +436,11 @@
 
   .results-button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-page .btn-primary:active:not(:disabled) {
+    transform: none;
   }
 }

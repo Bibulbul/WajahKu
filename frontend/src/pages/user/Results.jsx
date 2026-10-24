@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
 import { SKIN_ISSUES, SKIN_TYPES, formatRelative, parseScanDate } from '../../constants/skin';
-import { CATEGORIES, formatPrice } from '../../constants/products';
 import './Results.css';
 
 // Jenis kulit dulu, lalu masalah kulit dari keyakinan AI tertinggi. Angkanya tidak
@@ -18,6 +17,22 @@ const orderConditions = (conditions) => {
 };
 
 const STACKED_QUERY = '(max-width: 640px)';
+
+// Tingkat jerawat dari services/acne.py yang disertai saran ke dokter
+const SEE_DOCTOR = ['sedang', 'berat', 'sangat berat'];
+
+// Kategori produk di database masih bahasa Inggris
+const CATEGORIES = {
+  cleanser: 'Pembersih',
+  exfoliant: 'Eksfoliator',
+  mask: 'Masker',
+  moisturizer: 'Pelembap',
+  serum: 'Serum',
+  sunscreen: 'Tabir surya',
+  toner: 'Toner',
+};
+
+const formatPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
 const ProductCard = ({ product }) => (
   <li className="product-card">
@@ -121,6 +136,8 @@ const Results = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stacked, setStacked] = useState(() => window.matchMedia(STACKED_QUERY).matches);
+  const [showAcne, setShowAcne] = useState(true);
+  const [photoSize, setPhotoSize] = useState(null);
 
   // Maskot melirik ke foto: di kiri saat desktop, di atas saat HP
   useEffect(() => {
@@ -200,6 +217,8 @@ const Results = () => {
   const { scan, conditions, recommendations, products } = data;
   const date = parseScanDate(scan.scan_date);
   const { type, issues, all } = orderConditions(conditions);
+  // Tanda dan jumlah jerawat hanya tampil kalau Model B v2 juga menilai ada jerawat
+  const acne = conditions.jerawat ? data.acne : null;
   const routineGroups = all
     .filter(([key]) => recommendations?.[key]?.length)
     .map(([key, condition]) => ({ key, label: shortLabel(key, condition), steps: recommendations[key] }));
@@ -212,7 +231,40 @@ const Results = () => {
   return (
     <div className="results-page">
       <section className="results-summary">
-        <img className="results-photo" src={`/${scan.photo_path}`} alt="Foto wajah yang dianalisis" />
+        <div className="results-photo-frame">
+          <div className="results-photo-wrap">
+            <img
+              className="results-photo"
+              src={`/${scan.photo_path}`}
+              alt="Foto wajah yang dianalisis"
+              onLoad={(e) => setPhotoSize([e.currentTarget.naturalWidth, e.currentTarget.naturalHeight])}
+            />
+            {/* slice = object-fit: cover, jadi tanda tetap pas walau foto terpotong */}
+            {showAcne && acne?.count > 0 && photoSize && (
+              <svg
+                className="acne-marks"
+                viewBox={`0 0 ${photoSize[0]} ${photoSize[1]}`}
+                preserveAspectRatio="xMidYMid slice"
+                aria-hidden="true"
+              >
+                {acne.boxes.map(([x0, y0, x1, y1], i) => (
+                  <ellipse
+                    key={i}
+                    cx={((x0 + x1) / 2) * photoSize[0]}
+                    cy={((y0 + y1) / 2) * photoSize[1]}
+                    rx={((x1 - x0) / 2) * photoSize[0] + 6}
+                    ry={((y1 - y0) / 2) * photoSize[1] + 6}
+                  />
+                ))}
+              </svg>
+            )}
+          </div>
+          {acne?.count > 0 && (
+            <button type="button" className="acne-toggle" onClick={() => setShowAcne(!showAcne)}>
+              {showAcne ? 'Sembunyikan tanda jerawat' : 'Tampilkan tanda jerawat'}
+            </button>
+          )}
+        </div>
 
         <div className="results-summary-text">
           <div className="results-face">
@@ -251,6 +303,14 @@ const Results = () => {
                 <span className="condition-kind">{isType ? 'Jenis kulit' : 'Masalah kulit'}</span>
                 <h3>{condition.name}</h3>
                 <p>{condition.description}</p>
+                {key === 'jerawat' && acne && (
+                  <p className="condition-note">
+                    {acne.count > 0
+                      ? `Sekitar ${acne.count} jerawat ditandai di foto, tingkat ${acne.severity}.`
+                      : 'Lokasi jerawat belum bisa ditandai di foto ini.'}
+                    {SEE_DOCTOR.includes(acne.severity) && ' Jumlahnya cukup banyak, sebaiknya periksakan ke dokter kulit.'}
+                  </p>
+                )}
               </li>
             );
           })}
