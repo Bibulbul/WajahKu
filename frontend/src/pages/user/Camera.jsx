@@ -4,6 +4,29 @@ import api from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
 import './Camera.css';
 
+// Kuesioner jenis kulit. Urutan pertanyaan dan pilihan harus sama dengan QUIZ di services/classifier.py.
+const QUIZ = [
+  ['Sekitar 2 jam setelah cuci muka, tanpa memakai apa pun, wajahmu terasa...',
+    ['Kencang atau kering', 'Nyaman, tidak berminyak dan tidak kering', 'Berminyak di dahi dan hidung saja', 'Berminyak di seluruh wajah']],
+  ['Menjelang siang, wajahmu tampak mengilap di...',
+    ['Hampir tidak mengilap', 'Dahi dan hidung', 'Seluruh wajah']],
+  ['Seberapa sering kulitmu mengelupas atau terasa kasar?',
+    ['Sering, di banyak area', 'Kadang, terutama di pipi', 'Hampir tidak pernah']],
+  ['Pori-pori di wajahmu...',
+    ['Hampir tidak terlihat', 'Terlihat jelas di hidung dan dahi', 'Terlihat jelas, juga di pipi']],
+];
+const QUIZ_KEY = 'skin-quiz';
+
+// Jawaban disimpan di perangkat supaya tidak perlu diisi ulang tiap analisis.
+const readQuiz = () => {
+  try {
+    const answers = JSON.parse(localStorage.getItem(QUIZ_KEY));
+    return Array.isArray(answers) && answers.length === QUIZ.length ? answers : null;
+  } catch {
+    return null;
+  }
+};
+
 const STACKED_QUERY = '(max-width: 640px)';
 
 // Arah lirikan maskot ke tombol yang sedang disorot. Di HP maskot ada di atas tombol.
@@ -13,7 +36,8 @@ const LOOK = {
 };
 
 const Camera = () => {
-  const [mode, setMode] = useState('choose'); // 'choose', 'webcam', 'preview'
+  const [quiz, setQuiz] = useState(readQuiz);
+  const [mode, setMode] = useState(() => (readQuiz() ? 'choose' : 'quiz')); // 'quiz', 'choose', 'webcam', 'preview'
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -177,6 +201,7 @@ const Camera = () => {
 
     const formData = new FormData();
     formData.append('photo', selectedFile);
+    if (quiz) formData.append('skin_quiz', JSON.stringify(quiz));
 
     try {
       const { data } = await api.post('/upload', formData, {
@@ -191,6 +216,20 @@ const Camera = () => {
       showError(err.response?.data?.error || 'Server lagi tidak bisa dihubungi. Coba sebentar lagi.');
       setLoading(false);
     }
+  };
+
+  const submitQuiz = (e) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const answers = QUIZ.map((_, i) => Number(form.get(`q${i}`)));
+    setQuiz(answers);
+    try {
+      localStorage.setItem(QUIZ_KEY, JSON.stringify(answers));
+    } catch {
+      // Tanpa storage: jawaban tetap dipakai untuk analisis ini
+    }
+    window.scrollTo(0, 0);
+    setMode('choose');
   };
 
   // Reset pilihan
@@ -226,6 +265,46 @@ const Camera = () => {
 
   return (
     <div className="camera-page">
+      {/* MODE 0: KUESIONER JENIS KULIT (sekali, lalu disimpan di perangkat) */}
+      {mode === 'quiz' && (
+        <section className="camera-choose">
+          <div className="camera-copy">
+            <h1>Kenali jenis kulitmu.</h1>
+            <p className="camera-lead">
+              Empat pertanyaan singkat. Rasa berminyak atau kering lebih mudah kamu rasakan sendiri
+              daripada dibaca dari foto.
+            </p>
+
+            <form className="skin-quiz" onSubmit={submitQuiz}>
+              {QUIZ.map(([question, options], i) => (
+                <fieldset key={question} className="quiz-question">
+                  <legend>{question}</legend>
+                  {options.map((label, j) => (
+                    <label key={label} className="quiz-option">
+                      <input type="radio" name={`q${i}`} value={j} required defaultChecked={quiz?.[i] === j} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </fieldset>
+              ))}
+              <button type="submit" className="btn-primary camera-option">
+                Lanjut ke foto
+              </button>
+            </form>
+          </div>
+
+          <div className="camera-stage">
+            <div className="camera-face">
+              <FaceDots mood={mood} shakeKey={errorCount} lookDirection={lookDirection} />
+            </div>
+          </div>
+
+          <p className="camera-tips">
+            Jawabanmu disimpan di perangkat ini, jadi analisis berikutnya tidak perlu mengisi ulang.
+          </p>
+        </section>
+      )}
+
       {/* MODE 1: PILIH CARA */}
       {mode === 'choose' && (
         <section className="camera-choose">
@@ -264,6 +343,14 @@ const Camera = () => {
               />
             </div>
             <p className="camera-hint">JPG atau PNG, maksimal 5MB.</p>
+            {quiz && (
+              <p className="camera-hint">
+                Jenis kulit diambil dari jawaban kuesionermu.{' '}
+                <button type="button" className="quiz-change" onClick={() => setMode('quiz')}>
+                  Ubah jawaban
+                </button>
+              </p>
+            )}
 
             {errorMessage}
           </div>

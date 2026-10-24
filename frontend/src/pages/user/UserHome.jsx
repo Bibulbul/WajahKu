@@ -174,8 +174,9 @@ const UserHome = () => {
             Siap cek kulitmu hari ini?
           </h1>
           <p className="home-lead home-rise" style={{ '--rise-order': 2 }}>
-            Satu foto wajah cukup. WajahKu membaca jenis kulitmu dan memeriksa dahi, hidung,
-            pipi, dan dagu, lalu menyusun rutinitas perawatan.
+            Jawab empat pertanyaan singkat dan kirim satu foto wajah. WajahKu menentukan jenis
+            kulitmu dari jawabanmu, memeriksa dahi, bawah mata, hidung, pipi, dan dagu, lalu
+            menyusun rutinitas perawatan.
           </p>
           <div className="home-actions home-rise" style={{ '--rise-order': 3 }}>
             <Link to="/user/camera" className="btn-primary home-cta" {...ctaProps}>
