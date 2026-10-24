@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS scans (
     conditions_detected TEXT NOT NULL,
     confidence_scores TEXT NOT NULL,
     recommendations TEXT NOT NULL,
+    acne TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

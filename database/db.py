@@ -24,6 +24,10 @@ def init_db(app):
             with open(schema_path, 'r', encoding='utf-8') as f:
                 conn.executescript(f.read())
         
+        # Database yang dibuat sebelum deteksi jerawat belum punya kolom acne
+        if 'acne' not in [row[1] for row in conn.execute("PRAGMA table_info(scans)")]:
+            conn.execute("ALTER TABLE scans ADD COLUMN acne TEXT")
+
         cursor = conn.cursor()
         
         # Check if data exists

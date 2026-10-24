@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from PIL import Image
 
 from database.db import get_db
+from services.acne import analyze_acne
 from services.classifier import analyze_skin_image, skin_type_from_quiz, SKIN_CONDITIONS
 
 scan_bp = Blueprint('scan', __name__, url_prefix='/api')
@@ -57,6 +58,7 @@ def upload():
 
     try:
         conditions, recommendations = analyze_skin_image(filepath, skin_type)
+        acne = analyze_acne(filepath)
     except ValueError as e:
         os.remove(filepath)
         return jsonify({'error': str(e)}), 422
@@ -71,14 +73,15 @@ def upload():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            """INSERT INTO scans (user_id, photo_path, conditions_detected, confidence_scores, recommendations)
-               VALUES (?, ?, ?, ?, ?)""",
+            """INSERT INTO scans (user_id, photo_path, conditions_detected, confidence_scores, recommendations, acne)
+               VALUES (?, ?, ?, ?, ?, ?)""",
             (
                 user_id,
                 relative_path,
                 json.dumps(list(conditions.keys())),
                 json.dumps({k: v['confidence'] for k, v in conditions.items()}),
-                json.dumps(recommendations)
+                json.dumps(recommendations),
+                json.dumps(acne)
             )
         )
         scan_id = cursor.lastrowid
@@ -94,6 +97,7 @@ def upload():
         'scan_id': scan_id,
         'conditions': conditions,
         'recommendations': recommendations,
+        'acne': acne,
         'photo_path': relative_path
     }), 201
 
@@ -160,6 +164,7 @@ def get_scan(scan_id):
         'scan': dict(scan),
         'conditions': conditions,
         'recommendations': recommendations,
+        'acne': json.loads(scan['acne']) if scan['acne'] else None,
         'products': products
     }), 200
 
