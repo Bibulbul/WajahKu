@@ -11,12 +11,13 @@ export const SKIN_TYPES = {
 
 export const SKIN_ISSUES = {
   jerawat: 'Jerawat',
-  komedo: 'Komedo hitam',
+  komedo: 'Komedo',
   flek: 'Flek hitam',
   pori: 'Pori-pori besar',
   kusam: 'Kulit kusam',
   kemerahan: 'Kemerahan',
   kerutan: 'Kerutan',
+  kantung_mata: 'Kantung mata',
 };
 
 // SQLite menyimpan CURRENT_TIMESTAMP dalam UTC tanpa penanda zona
