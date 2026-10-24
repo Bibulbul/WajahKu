@@ -1,9 +1,10 @@
+import json
 import os
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
 from database.db import get_db
-from services.face import crop_face, face_regions
+from services.face import REGIONS_V2, crop_face, face_regions
 
 SKIN_CONDITIONS = {
     'jerawat': {
@@ -31,8 +32,12 @@ SKIN_CONDITIONS = {
         'description': 'Kombinasi kulit berminyak di T-zone (dahi, hidung, dagu) dan normal/kering di area pipi. (Perkiraan AI)'
     },
     'komedo': {
-        'name': 'Komedo Hitam',
-        'description': 'Pori-pori tersumbat sebum dan sel kulit mati yang teroksidasi sehingga tampak sebagai titik hitam, biasanya di hidung dan dagu.'
+        'name': 'Komedo',
+        'description': 'Pori-pori tersumbat sebum dan sel kulit mati. Tampak sebagai titik hitam (blackhead) atau bintik putih kecil (whitehead), biasanya di hidung, dahi, dan dagu.'
+    },
+    'kantung_mata': {
+        'name': 'Kantung Mata',
+        'description': 'Area bawah mata tampak bengkak atau menggantung. Sering dipengaruhi kurang tidur, retensi cairan, faktor keturunan, dan usia.'
     },
     'flek': {
         'name': 'Flek Hitam',
@@ -60,20 +65,28 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
-# Urutan = CLASSES di train_skin_type.py / train_skin_issue.py.
+# Urutan = CLASSES di train_skin_type.py.
 TYPE_LABELS = ['kombinasi', 'kering', 'normal', 'berminyak']
-ISSUE_LABELS = ['jerawat', 'komedo', 'flek', None, 'pori']  # None = kelas normal (tidak ada masalah)
 TYPE_MIN = 0.6   # di test set: 58% foto lolos, 53% benar. Di bawahnya tampil "belum pasti"
-ISSUE_MIN = 0.5  # masalah dianggap ada bila di salah satu area wajah probabilitasnya >= 50%
+
+# Model B v2 (multi-label, train_skin_issue_v2.py): kelas dan ambang per kelas dari models/skin_issue_v2.json.
+ISSUE_NAMES = {'acne': 'jerawat', 'comedo': 'komedo', 'pores': 'pori', 'wrinkles': 'kerutan',
+               'redness': 'kemerahan', 'dark_spots': 'flek', 'eye_bags': 'kantung_mata'}
+_issue_cfg = json.load(open(os.path.join(ROOT, 'models', 'skin_issue_v2.json'), encoding='utf-8'))
+ISSUE_LABELS = [ISSUE_NAMES[c] for c in _issue_cfg['classes']]
+ISSUE_MIN = np.array(_issue_cfg['face_thresholds'])  # ambang level wajah (maks 7 area), dari tune_face_thresholds_v2.py
 
 _type = ort.InferenceSession(os.path.join(ROOT, 'models', 'skin_type.onnx'), providers=['CPUExecutionProvider'])
-_issue = ort.InferenceSession(os.path.join(ROOT, 'models', 'skin_issue.onnx'), providers=['CPUExecutionProvider'])
+_issue = ort.InferenceSession(os.path.join(ROOT, 'models', 'skin_issue_v2.onnx'), providers=['CPUExecutionProvider'])
 
 
-def _probs(session, images):
+def _logits(session, images):
     x = np.stack([((np.asarray(im.resize((224, 224), Image.BILINEAR), dtype=np.float32) / 255 - MEAN) / STD).transpose(2, 0, 1)
                   for im in images])
-    logits = session.run(None, {'pixel_values': x})[0]
+    return session.run(None, {'pixel_values': x})[0]
+
+
+def _softmax(logits):
     e = np.exp(logits - logits.max(1, keepdims=True))
     return e / e.sum(1, keepdims=True)
 
@@ -81,11 +94,11 @@ def _probs(session, images):
 def predict(image_path):
     """{kondisi: probabilitas 0-1}. Jenis kulit dari seluruh wajah, masalah kulit dari tiap area wajah."""
     face = crop_face(Image.open(image_path).convert('RGB'))
-    p = _probs(_type, [face])[0]
+    p = _softmax(_logits(_type, [face]))[0]
     found = {TYPE_LABELS[p.argmax()] if p.max() >= TYPE_MIN else 'jenis_belum_pasti': float(p.max())}
-    worst = _probs(_issue, face_regions(face)).max(0)  # skor tertinggi per masalah di antara semua area
-    for label, score in zip(ISSUE_LABELS, worst):
-        if label and score >= ISSUE_MIN:
+    worst = (1 / (1 + np.exp(-_logits(_issue, face_regions(face, REGIONS_V2))))).max(0)  # skor tertinggi per masalah di antara 7 area
+    for label, score, th in zip(ISSUE_LABELS, worst, ISSUE_MIN):
+        if score >= th:
             found[label] = float(score)
     return found
 
