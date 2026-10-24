@@ -13,11 +13,11 @@ SKIN_CONDITIONS = {
     },
     'berminyak': {
         'name': 'Kulit Berminyak',
-        'description': 'Produksi sebum berlebihan yang membuat wajah terlihat mengkilap dan pori-pori membesar. (Perkiraan AI)'
+        'description': 'Produksi sebum berlebihan yang membuat wajah terlihat mengkilap dan pori-pori membesar.'
     },
     'kering': {
         'name': 'Kulit Kering',
-        'description': 'Kulit terasa kencang, kasar, dan kusam karena kurangnya kelembaban alami. (Perkiraan AI)'
+        'description': 'Kulit terasa kencang, kasar, dan kusam karena kurangnya kelembaban alami.'
     },
     'kusam': {
         'name': 'Kulit Kusam',
@@ -29,7 +29,7 @@ SKIN_CONDITIONS = {
     },
     'kombinasi': {
         'name': 'Kulit Kombinasi',
-        'description': 'Kombinasi kulit berminyak di T-zone (dahi, hidung, dagu) dan normal/kering di area pipi. (Perkiraan AI)'
+        'description': 'Kombinasi kulit berminyak di T-zone (dahi, hidung, dagu) dan normal/kering di area pipi.'
     },
     'komedo': {
         'name': 'Komedo',
@@ -53,7 +53,7 @@ SKIN_CONDITIONS = {
     },
     'normal': {
         'name': 'Kulit Normal',
-        'description': 'Produksi minyak dan kelembaban seimbang, tidak terlalu berminyak maupun kering. (Perkiraan AI)'
+        'description': 'Produksi minyak dan kelembaban seimbang, tidak terlalu berminyak maupun kering.'
     },
     'jenis_belum_pasti': {
         'name': 'Jenis Kulit Belum Pasti',
@@ -65,9 +65,28 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
-# Urutan = CLASSES di train_skin_type.py.
-TYPE_LABELS = ['kombinasi', 'kering', 'normal', 'berminyak']
-TYPE_MIN = 0.6   # di test set: 58% foto lolos, 53% benar. Di bawahnya tampil "belum pasti"
+# Kuesioner jenis kulit (pengganti Model A, yang akurasinya hanya 44%). Minyak dan rasa kering lebih mudah
+# dirasakan pengguna daripada dibaca dari foto. Tiap pilihan = (skor T-zone, skor pipi): -1 kering, 0 normal, +1 berminyak.
+# Urutan pertanyaan dan pilihan harus sama dengan QUIZ di frontend/src/pages/user/Camera.jsx.
+QUIZ = [
+    [(-1, -1), (0, 0), (1, 0), (1, 1)],  # 2 jam setelah cuci muka: kencang, nyaman, T-zone berminyak, semua berminyak
+    [(0, 0), (1, 0), (1, 1)],            # siang hari mengilap: hampir tidak, dahi dan hidung, seluruh wajah
+    [(-1, -1), (0, -1), (0, 0)],         # mengelupas atau kasar: sering, kadang di pipi, hampir tidak pernah
+    [(0, 0), (1, 0), (1, 1)],            # pori terlihat: hampir tidak, hidung dan dahi, juga di pipi
+]
+
+
+def skin_type_from_quiz(answers):
+    """answers = indeks pilihan per pertanyaan. ValueError kalau tidak lengkap atau di luar pilihan."""
+    if not isinstance(answers, list) or len(answers) != len(QUIZ) or not all(
+            type(a) is int and 0 <= a < len(q) for a, q in zip(answers, QUIZ)):
+        raise ValueError('Jawaban kuesioner jenis kulit tidak valid')
+    t = sum(QUIZ[i][a][0] for i, a in enumerate(answers))
+    c = sum(QUIZ[i][a][1] for i, a in enumerate(answers))
+    if t >= 2:
+        return 'berminyak' if c >= 2 else 'kombinasi'
+    return 'kering' if t + c <= -2 else 'normal'
+
 
 # Model B v2 (multi-label, train_skin_issue_v2.py): kelas dan ambang per kelas dari models/skin_issue_v2.json.
 ISSUE_NAMES = {'acne': 'jerawat', 'comedo': 'komedo', 'pores': 'pori', 'wrinkles': 'kerutan',
@@ -76,7 +95,6 @@ _issue_cfg = json.load(open(os.path.join(ROOT, 'models', 'skin_issue_v2.json'), 
 ISSUE_LABELS = [ISSUE_NAMES[c] for c in _issue_cfg['classes']]
 ISSUE_MIN = np.array(_issue_cfg['face_thresholds'])  # ambang level wajah (maks 7 area), dari tune_face_thresholds_v2.py
 
-_type = ort.InferenceSession(os.path.join(ROOT, 'models', 'skin_type.onnx'), providers=['CPUExecutionProvider'])
 _issue = ort.InferenceSession(os.path.join(ROOT, 'models', 'skin_issue_v2.onnx'), providers=['CPUExecutionProvider'])
 
 
@@ -86,16 +104,10 @@ def _logits(session, images):
     return session.run(None, {'pixel_values': x})[0]
 
 
-def _softmax(logits):
-    e = np.exp(logits - logits.max(1, keepdims=True))
-    return e / e.sum(1, keepdims=True)
-
-
 def predict(image_path):
-    """{kondisi: probabilitas 0-1}. Jenis kulit dari seluruh wajah, masalah kulit dari tiap area wajah."""
+    """{masalah kulit: probabilitas 0-1}, dari tiap area wajah."""
     face = crop_face(Image.open(image_path).convert('RGB'))
-    p = _softmax(_logits(_type, [face]))[0]
-    found = {TYPE_LABELS[p.argmax()] if p.max() >= TYPE_MIN else 'jenis_belum_pasti': float(p.max())}
+    found = {}
     worst = (1 / (1 + np.exp(-_logits(_issue, face_regions(face, REGIONS_V2))))).max(0)  # skor tertinggi per masalah di antara 7 area
     for label, score, th in zip(ISSUE_LABELS, worst, ISSUE_MIN):
         if score >= th:
@@ -103,9 +115,10 @@ def predict(image_path):
     return found
 
 
-def analyze_skin_image(image_path):
-    found = predict(image_path)
-    results = {c: {**SKIN_CONDITIONS[c], 'confidence': round(p * 100)} for c, p in found.items()}
+def analyze_skin_image(image_path, skin_type=None):
+    """skin_type dari skin_type_from_quiz; confidence-nya None karena bukan tebakan model."""
+    found = {**({skin_type: None} if skin_type else {}), **predict(image_path)}
+    results = {c: {**SKIN_CONDITIONS[c], 'confidence': None if p is None else round(p * 100)} for c, p in found.items()}
 
     conn = get_db()
     recommendations = {}

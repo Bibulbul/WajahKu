@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from PIL import Image
 
 from database.db import get_db
-from services.classifier import analyze_skin_image, SKIN_CONDITIONS
+from services.classifier import analyze_skin_image, skin_type_from_quiz, SKIN_CONDITIONS
 
 scan_bp = Blueprint('scan', __name__, url_prefix='/api')
 
@@ -33,6 +33,13 @@ def upload():
     if not allowed_file(file.filename):
         return jsonify({'error': 'Format file tidak didukung. Gunakan JPG, JPEG, atau PNG'}), 400
 
+    # Jawaban kuesioner jenis kulit, mis. "[1,0,2,0]". Tidak ada = jenis kulit tidak ditampilkan.
+    quiz = request.form.get('skin_quiz')
+    try:
+        skin_type = skin_type_from_quiz(json.loads(quiz)) if quiz else None
+    except ValueError:  # termasuk JSON rusak
+        return jsonify({'error': 'Jawaban kuesioner jenis kulit tidak valid'}), 400
+
     ext = file.filename.rsplit('.', 1)[1].lower()
     filename = f"{uuid.uuid4()}.{ext}"
     upload_folder = current_app.config['UPLOAD_FOLDER']
@@ -49,7 +56,7 @@ def upload():
         return jsonify({'error': 'Gagal memproses file foto'}), 500
 
     try:
-        conditions, recommendations = analyze_skin_image(filepath)
+        conditions, recommendations = analyze_skin_image(filepath, skin_type)
     except ValueError as e:
         os.remove(filepath)
         return jsonify({'error': str(e)}), 422
