@@ -290,6 +290,21 @@
   font-weight: 700;
 }
 
+/* Alasan produk dipilih: bahan aktif yang cocok dengan kondisi scan */
+.product-reasons {
+  list-style: none;
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1.5px solid var(--line);
+  font-size: var(--text-sm);
+}
+
+.product-reasons.is-basic {
+  color: var(--ink-soft);
+}
+
 .product-meta {
   display: flex;
   flex-wrap: wrap;
