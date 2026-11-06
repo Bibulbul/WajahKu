@@ -8,6 +8,7 @@ from PIL import Image
 from database.db import get_db
 from services.acne import analyze_acne
 from services.classifier import analyze_skin_image, skin_type_from_quiz, SKIN_CONDITIONS
+from services.recommend import recommend_products
 
 scan_bp = Blueprint('scan', __name__, url_prefix='/api')
 
@@ -145,13 +146,9 @@ def get_scan(scan_id):
                    COALESCE(AVG(pr.rating), 0) as avg_rating
             FROM products p
             LEFT JOIN product_reviews pr ON p.id = pr.product_id
-            WHERE p.id IN (
-                SELECT id FROM products ORDER BY RANDOM() LIMIT 6
-            )
             GROUP BY p.id
-            LIMIT 6
         """)
-        products = [dict(row) for row in cursor.fetchall()]
+        products = recommend_products([dict(row) for row in cursor.fetchall()], conditions_list)
 
     except Exception as e:
         current_app.logger.error(f"Gagal mengambil data scan: {e}")
