@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../services/api';
+import api, { fileUrl } from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
 import { SKIN_ISSUES, SKIN_TYPES, formatRelative, parseScanDate } from '../../constants/skin';
 import './Results.css';
@@ -264,7 +264,7 @@ const Results = () => {
           <div className="results-photo-wrap">
             <img
               className="results-photo"
-              src={`/${scan.photo_path}`}
+              src={fileUrl(scan.photo_path)}
               alt="Foto wajah yang dianalisis"
               onLoad={(e) => setPhotoSize([e.currentTarget.naturalWidth, e.currentTarget.naturalHeight])}
             />

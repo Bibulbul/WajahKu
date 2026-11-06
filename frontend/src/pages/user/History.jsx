@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../services/api';
+import api, { fileUrl } from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
 import { SKIN_ISSUES, SKIN_TYPES, formatRelative, parseScanDate } from '../../constants/skin';
 import './History.css';
@@ -46,7 +46,7 @@ const ScanRow = ({ scan, date }) => {
       <Link to={`/user/results/${scan.id}`} className="history-row">
         <img
           className="history-thumb"
-          src={`/${scan.photo_path}`}
+          src={fileUrl(scan.photo_path)}
           alt={`Foto scan ${fullDate}`}
           loading="lazy"
         />

@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+// Alamat backend. Kosong = sama dengan alamat frontend: saat development lewat proxy di
+// vite.config.js, saat production lewat server yang meneruskan /api dan /static ke Flask.
+// Isi VITE_API_URL (lihat .env.example) kalau backend ada di domain lain.
+const API_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+
+// Backend menyimpan foto scan sebagai path relatif, mis. static/uploads/abc.jpg
+export const fileUrl = (path) => `${API_URL}/${path}`;
+
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${API_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

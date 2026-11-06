@@ -30,8 +30,9 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div className="spinner"></div>
+      <div className="app-loading" role="status">
+        <div className="spinner" aria-hidden="true"></div>
+        <span className="sr-only">Memuat…</span>
       </div>
     );
   }
