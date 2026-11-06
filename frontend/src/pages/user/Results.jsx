@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api, { fileUrl } from '../../services/api';
 import FaceDots from '../../components/common/FaceDots';
+import Modal from '../../components/common/Modal';
+import { CATEGORIES, formatPrice } from '../../constants/products';
 import { SKIN_ISSUES, SKIN_TYPES, formatRelative, parseScanDate } from '../../constants/skin';
 import './Results.css';
 
@@ -21,18 +23,7 @@ const STACKED_QUERY = '(max-width: 640px)';
 // Tingkat jerawat dari services/acne.py yang disertai saran ke dokter
 const SEE_DOCTOR = ['sedang', 'berat', 'sangat berat'];
 
-// Kategori produk di database masih bahasa Inggris
-const CATEGORIES = {
-  cleanser: 'Pembersih',
-  exfoliant: 'Eksfoliator',
-  mask: 'Masker',
-  moisturizer: 'Pelembap',
-  serum: 'Serum',
-  sunscreen: 'Tabir surya',
-  toner: 'Toner',
-};
-
-const formatPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
+const formatRating = (value) => value.toLocaleString('id-ID', { maximumFractionDigits: 1 });
 const formatList = new Intl.ListFormat('id', { type: 'conjunction' });
 
 // Nama kondisi di tengah kalimat, mis. "untuk jerawat dan kulit berminyak"
@@ -48,8 +39,82 @@ const groupReasons = (reasons = []) => {
   return [...byIngredient];
 };
 
+const Stars = ({ rating }) => (
+  <span className="review-stars" role="img" aria-label={`${rating} dari 5`}>
+    {'★'.repeat(rating)}
+    <span className="review-stars-off">{'★'.repeat(5 - rating)}</span>
+  </span>
+);
+
+// Ulasan hanya bisa dibaca: backend belum punya endpoint untuk menulis ulasan
+const ReviewsDialog = ({ product, onClose }) => {
+  const [reviews, setReviews] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get(`/products/${product.id}/reviews`)
+      .then(({ data }) => active && setReviews(data))
+      .catch(() => active && setFailed(true));
+    return () => {
+      active = false;
+    };
+  }, [product.id, attempt]);
+
+  const retry = () => {
+    setFailed(false);
+    setAttempt((n) => n + 1);
+  };
+
+  return (
+    <Modal title={`Ulasan ${product.name}`} onClose={onClose}>
+      <p className="reviews-summary">
+        <span aria-hidden="true">★ </span>
+        {formatRating(product.avg_rating)} dari 5 · {product.review_count} ulasan
+      </p>
+      {failed ? (
+        <div className="reviews-message">
+          <p>Ulasan belum bisa dimuat. Periksa koneksi lalu coba lagi.</p>
+          <button type="button" className="btn-secondary results-button" onClick={retry}>
+            Coba lagi
+          </button>
+        </div>
+      ) : !reviews ? (
+        <p className="reviews-message" role="status">Memuat ulasan…</p>
+      ) : reviews.length === 0 ? (
+        <p className="reviews-message">Belum ada ulasan untuk produk ini.</p>
+      ) : (
+        <ul className="review-list">
+          {reviews.map((review) => {
+            const date = parseScanDate(review.review_date);
+            return (
+              <li key={review.id}>
+                <div className="review-head">
+                  <strong>{review.reviewer_name}</strong>
+                  <Stars rating={review.rating} />
+                </div>
+                <time
+                  className="review-date"
+                  dateTime={date.toISOString()}
+                  title={date.toLocaleDateString('id-ID', { dateStyle: 'long' })}
+                >
+                  {formatRelative(date)}
+                </time>
+                <p>{review.review_text}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Modal>
+  );
+};
+
 const ProductCard = ({ product }) => {
   const reasons = groupReasons(product.reasons);
+  const [showReviews, setShowReviews] = useState(false);
   return (
     <li className="product-card">
       <span className="product-category">{CATEGORIES[product.category] ?? product.category}</span>
@@ -71,15 +136,21 @@ const ProductCard = ({ product }) => {
       <div className="product-meta">
         <span className="product-bpom">BPOM {product.bpom_number}</span>
         {product.review_count > 0 ? (
-          <span className="product-rating">
+          <button
+            type="button"
+            className="product-rating product-rating-button"
+            aria-label={`Lihat ${product.review_count} ulasan, rating ${formatRating(product.avg_rating)} dari 5`}
+            onClick={() => setShowReviews(true)}
+          >
             <span aria-hidden="true">★ </span>
-            {product.avg_rating.toLocaleString('id-ID', { maximumFractionDigits: 1 })} dari 5
+            {formatRating(product.avg_rating)} dari 5
             <span className="product-reviews"> ({product.review_count} ulasan)</span>
-          </span>
+          </button>
         ) : (
           <span className="product-rating product-reviews">Belum ada ulasan</span>
         )}
       </div>
+      {showReviews && <ReviewsDialog product={product} onClose={() => setShowReviews(false)} />}
     </li>
   );
 };
