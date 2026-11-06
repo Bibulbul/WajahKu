@@ -10,16 +10,9 @@ import History from './pages/user/History';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProductManagement from './pages/admin/ProductManagement';
 
+// App sudah menunggu pengecekan login selesai, jadi di sini user sudah pasti terisi atau null
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div className="spinner"></div>
-      </div>
-    );
-  }
+  const { user } = useAuth();
 
   if (!user) {
     return <Navigate to="/login" replace />;
