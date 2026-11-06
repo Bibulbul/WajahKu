@@ -3,7 +3,6 @@ import { useAuth } from '../../hooks/useAuth';
 import LogoMark from '../common/LogoMark';
 import './AdminLayout.css';
 
-// Halaman Pengaturan belum ada (rute masih placeholder), jadi tidak ditampilkan di menu
 const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard' },
   { to: '/admin/products', label: 'Produk' },

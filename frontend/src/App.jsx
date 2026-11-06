@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
+import NotFound from './pages/NotFound';
 import UserLayout from './components/layout/UserLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import UserHome from './pages/user/UserHome';
@@ -44,6 +45,7 @@ function App() {
         
         {/* User Routes */}
         <Route path="/user" element={<ProtectedRoute requiredRole="user"><UserLayout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<UserHome />} />
           <Route path="camera" element={<Camera />} />
           <Route path="results/:scanId" element={<Results />} />
@@ -52,16 +54,16 @@ function App() {
 
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<ProductManagement />} />
-          <Route path="settings" element={<div style={{ padding: '28px' }}><h1>Pengaturan</h1><p>Coming soon...</p></div>} />
         </Route>
 
         {/* Root redirect */}
         <Route path="/" element={<Navigate to={user ? (user.role === 'admin' ? '/admin/dashboard' : '/user/home') : '/login'} replace />} />
         
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Alamat yang tidak dikenal */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

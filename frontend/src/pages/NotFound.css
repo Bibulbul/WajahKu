@@ -1,0 +1,52 @@
+/* 404: panggung blush seperti halaman login, wajah sedih di tengah */
+.notfound-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: var(--space-5) var(--gutter);
+  background: var(--blush);
+}
+
+.notfound-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) 0;
+  text-align: center;
+}
+
+.notfound-face {
+  width: 160px;
+  margin-bottom: var(--space-5);
+}
+
+.notfound-code {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.notfound-main h1 {
+  margin-top: var(--space-2);
+  font-size: clamp(2.25rem, 6vw, 4rem);
+  text-wrap: balance;
+}
+
+.notfound-text {
+  max-width: 40ch;
+  margin-top: var(--space-3);
+}
+
+.notfound-button {
+  min-height: 48px;
+  margin-top: var(--space-5);
+  padding: var(--space-2) var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .notfound-face {
+    width: 120px;
+  }
+}
