@@ -63,7 +63,7 @@
 
 .pm-table {
   width: 100%;
-  min-width: 720px;
+  min-width: 880px;
   border-collapse: collapse;
 }
 
@@ -107,6 +107,23 @@
 
 .pm-bpom {
   font-size: var(--text-sm);
+}
+
+/* Bahan aktif dipakai rekomendasi produk, yang kosong ditandai */
+.pm-missing {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.pm-ingredients {
+  max-width: 240px;
+  font-size: var(--text-sm);
+}
+
+.pm-empty-cell {
+  color: var(--ink-soft);
+  font-style: italic;
 }
 
 .pm-actions {
@@ -166,6 +183,11 @@
 .pm-form .form-group select,
 .pm-form .form-group textarea {
   background: var(--paper);
+}
+
+.pm-hint {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
 }
 
 .pm-form-row {

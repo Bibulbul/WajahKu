@@ -82,9 +82,11 @@ const ProductManagement = () => {
   };
 
   const query = searchTerm.trim().toLowerCase();
-  const filteredProducts = products.filter(
-    (p) => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+  const filteredProducts = products.filter((p) =>
+    [p.name, p.brand, p.active_ingredients].some((text) => text?.toLowerCase().includes(query))
   );
+  // Rekomendasi di halaman hasil mencocokkan bahan aktif dengan kondisi scan
+  const missingIngredients = products.filter((p) => !p.active_ingredients?.trim()).length;
 
   return (
     <div className="product-management">
@@ -92,6 +94,11 @@ const ProductManagement = () => {
         <div>
           <h1>Produk</h1>
           {!loading && !loadError && <p className="pm-count">{products.length} produk di katalog</p>}
+          {!loading && !loadError && missingIngredients > 0 && (
+            <p className="pm-missing">
+              {missingIngredients} produk belum punya bahan aktif, jadi belum bisa dicocokkan dengan hasil scan.
+            </p>
+          )}
         </div>
         <button type="button" onClick={() => openDialog({ type: 'form', product: null })} className="btn-primary pm-button">
           Tambah produk
@@ -120,7 +127,7 @@ const ProductManagement = () => {
             <input
               id="pm-search"
               type="search"
-              placeholder="Cari nama atau merek"
+              placeholder="Cari nama, merek, atau bahan aktif"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -139,6 +146,7 @@ const ProductManagement = () => {
                   <tr>
                     <th scope="col">Produk</th>
                     <th scope="col">Kategori</th>
+                    <th scope="col">Bahan aktif</th>
                     <th scope="col" className="is-number">Harga</th>
                     <th scope="col">BPOM</th>
                     <th scope="col" className="is-number">Ulasan</th>
@@ -153,6 +161,9 @@ const ProductManagement = () => {
                         <span className="pm-brand">{product.brand}</span>
                       </td>
                       <td>{CATEGORIES[product.category] ?? product.category}</td>
+                      <td className="pm-ingredients">
+                        {product.active_ingredients?.trim() || <span className="pm-empty-cell">Belum diisi</span>}
+                      </td>
                       <td className="is-number">{formatPrice.format(product.price)}</td>
                       <td><span className="pm-bpom">{product.bpom_number}</span></td>
                       <td className="is-number">{product.review_count}</td>
@@ -287,8 +298,17 @@ const ProductModal = ({ product, busy, error, onClose, onSubmit }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor={`${id}-active_ingredients`}>Bahan aktif (opsional)</label>
-          <input type="text" placeholder="Misalnya Niacinamide, Centella" {...field('active_ingredients')} />
+          <label htmlFor={`${id}-active_ingredients`}>Bahan aktif</label>
+          <input
+            type="text"
+            required
+            placeholder="Misalnya Salicylic Acid, Niacinamide"
+            aria-describedby={`${id}-active_ingredients-hint`}
+            {...field('active_ingredients')}
+          />
+          <p id={`${id}-active_ingredients-hint`} className="pm-hint">
+            Pisahkan dengan koma, tulis seperti di kemasan. Dipakai untuk mencocokkan produk dengan hasil scan.
+          </p>
         </div>
 
         <p className="pm-dialog-error" aria-live="polite">{error}</p>
