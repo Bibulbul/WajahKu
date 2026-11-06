@@ -39,9 +39,9 @@ def init_db(app):
                 with open(seed_path, 'r', encoding='utf-8') as f:
                     conn.executescript(f.read())
         
-        # Check if test users exist
+        # Check if test users exist (akun uji tidak dibuat di production: passwordnya tertulis di repo)
         cursor.execute("SELECT COUNT(*) FROM users")
-        if cursor.fetchone()[0] == 0:
+        if not app.config['PRODUCTION'] and cursor.fetchone()[0] == 0:
             # Create test accounts
             cursor.execute("""
                 INSERT INTO users (username, email, password_hash, role) 
