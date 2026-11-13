@@ -1,9 +1,17 @@
+import time
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import get_db
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+
+# Batas tebak password: 5 kali salah per (IP, email) dalam 15 menit
+LOGIN_LIMIT = 5
+LOGIN_WINDOW = 15 * 60
+# shortcut: disimpan di memori per proses (hilang saat restart, tidak dibagi antar worker), pindah ke database/Redis kalau server memakai banyak worker
+failed_logins = {}
 
 
 @auth_bp.route('/register', methods=['POST'])
@@ -69,6 +77,12 @@ def login():
     email = data['email'].strip().lower()
     password = data['password']
 
+    now = time.time()
+    key = (request.remote_addr, email)
+    recent = [t for t in failed_logins.get(key, []) if now - t < LOGIN_WINDOW]
+    if len(recent) >= LOGIN_LIMIT:
+        return jsonify({'error': 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.'}), 429
+
     conn = None
     try:
         conn = get_db()
@@ -82,7 +96,13 @@ def login():
             conn.close()
 
     if not user or not check_password_hash(user['password_hash'], password):
+        failed_logins[key] = recent + [now]
+        if len(failed_logins) > 10000:  # buang catatan lama supaya memori tidak terus bertambah
+            for k in [k for k, ts in failed_logins.items() if now - ts[-1] >= LOGIN_WINDOW]:
+                del failed_logins[k]
         return jsonify({'error': 'Email atau password salah'}), 401
+
+    failed_logins.pop(key, None)
 
     access_token = create_access_token(
         identity=str(user['id']),
