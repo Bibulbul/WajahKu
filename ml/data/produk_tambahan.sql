@@ -1,4 +1,4 @@
--- Dibuat ml/produk_skincare.py dari produk.csv, 2026-11-06
+-- Dibuat ml/produk_skincare.py dari produk.csv, 2026-11-13
 INSERT INTO products (name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients) VALUES
 ('Scarlett Daily Tone Up Moisturizing Cream', 'Scarlett', 'moisturizer', 'Scarlett Daily Tone Up Moisturizing Cream', 75000, 'NA18250116891', 0, 'Niacinamide, Allantoin'),
 ('Scarlett Acne Serum Azeclair, 2% Salicylic Acid & Niacinamide', 'Scarlett', 'serum', 'Scarlett Acne Serum Azeclair, 2% Salicylic Acid & Niacinamide', 75000, 'NA18250116993', 0, 'Salicylic Acid, Tea Tree Water, Niacinamide'),

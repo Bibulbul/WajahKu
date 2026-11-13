@@ -1,4 +1,4 @@
-from services.ingredients import conditions_of
+from services.ingredients import EYE_PRODUCT, conditions_of
 
 ISSUES = {'jerawat', 'komedo', 'pori', 'kerutan', 'kemerahan', 'flek', 'kantung_mata'}
 SKIN_TYPES = {'berminyak', 'kering', 'kombinasi', 'normal'}
@@ -8,8 +8,9 @@ BASICS = ('cleanser', 'moisturizer', 'sunscreen')
 def reasons(product, conditions):
     """[{'condition', 'ingredient'}] untuk kondisi scan yang cocok dengan bahan aktif produk."""
     found = {}
+    eye = bool(EYE_PRODUCT.search(product.get('name') or ''))  # eye cream/serum: juga untuk kantung mata
     for part in (product['active_ingredients'] or '').split(','):
-        for c in conditions_of(part):
+        for c in conditions_of(part, eye):
             if c in conditions:
                 found.setdefault(c, part.strip())
     return [{'condition': c, 'ingredient': i} for c, i in found.items()]

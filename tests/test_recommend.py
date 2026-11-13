@@ -55,6 +55,14 @@ def test_word_match_only():
         [{'condition': 'kusam', 'ingredient': 'PHA'}]
 
 
+def test_eye_product():
+    # Peptide di eye serum untuk kantung mata, di serum wajah biasa tidak
+    eye = {'name': 'Crystalice Eye Serum', 'active_ingredients': 'Peptide'}
+    face = {'name': 'Youth Serum', 'active_ingredients': 'Peptide'}
+    assert reasons(eye, {'kantung_mata'}) == [{'condition': 'kantung_mata', 'ingredient': 'Peptide'}]
+    assert reasons(face, {'kantung_mata'}) == []
+
+
 if __name__ == '__main__':
-    test_acne_first(); test_scenarios(); test_same_result_every_time(); test_word_match_only()
+    test_acne_first(); test_scenarios(); test_same_result_every_time(); test_word_match_only(); test_eye_product()
     print('ok')

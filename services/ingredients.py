@@ -51,17 +51,25 @@ INGREDIENT_CONDITIONS = {
     # Hidrasi
     r'hyaluronic|hyaluronate': ['kering', 'normal', 'kombinasi'],
     r'squalane': ['kering'],
-    r'urea': ['kering'],
+    r'(?<!yl )\burea\b': ['kering'],  # bukan pengawet diazolidinyl/imidazolidinyl urea
 }
 
+# Di produk area mata (eye cream/serum), bahan ini juga untuk kantung mata dan mata panda.
+# Di produk wajah biasa tidak, supaya serum niacinamide tidak ikut "untuk kantung mata".
+EYE_PRODUCT = re.compile(r'\beyes?\b|\bmata\b', re.I)
+EYE_AREA = r'caffeine|kafein|peptide|adenosine|vitamin c|ascorbic|ascorbyl|niacinamide|licorice|glycyrrhiza|retinol|retinal'
 
-def conditions_of(ingredient):
-    """Kondisi yang cocok untuk satu nama bahan, mis. 'Salicylic Acid 2%' -> ['jerawat', ...]."""
+
+def conditions_of(ingredient, eye=False):
+    """Kondisi yang cocok untuk satu nama bahan, mis. 'Salicylic Acid 2%' -> ['jerawat', ...].
+    eye=True kalau produknya untuk area mata (EYE_PRODUCT cocok dengan nama produk)."""
     text = ingredient.lower()
     found = []
     for pattern, conds in INGREDIENT_CONDITIONS.items():
         if re.search(pattern, text):
             found += [c for c in conds if c not in found]
+    if eye and re.search(EYE_AREA, text) and 'kantung_mata' not in found:
+        found.append('kantung_mata')
     return found
 
 
@@ -71,4 +79,7 @@ if __name__ == '__main__':
     assert conditions_of('Zinc Oxide') == []  # tabir surya, bukan zinc PCA
     assert conditions_of('Caffeine') == ['kantung_mata']
     assert conditions_of('Glycerin') == []
+    assert conditions_of('Diazolidinyl Urea') == [] and conditions_of('Urea 10%') == ['kering']
+    assert conditions_of('Peptide') == ['kerutan'] and conditions_of('Peptide', eye=True) == ['kerutan', 'kantung_mata']
+    assert EYE_PRODUCT.search('Crystalice Eye Serum') and not EYE_PRODUCT.search('Sunscreen Tabir Surya Matahari')
     print('ok')

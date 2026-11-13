@@ -11,7 +11,7 @@ import csv, os, re, sqlite3, sys
 from collections import Counter
 from datetime import date
 
-from services.ingredients import conditions_of
+from services.ingredients import EYE_PRODUCT, conditions_of
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COLUMNS = ['nama', 'merek', 'kategori', 'deskripsi', 'harga', 'nomor_bpom', 'bahan_aktif',
@@ -135,7 +135,8 @@ def main(path):
         print(f'  ditolak {n}x: {why}')
     print('per kategori:', dict(Counter(p['category'] for p in ok)))
     print(f"BPOM sudah dicek: {sum(p['bpom_verified'] for p in ok)}/{len(ok)}")
-    cover = Counter(c for p in ok for c in {c for b in p['active_ingredients'].split(', ') for c in conditions_of(b)})
+    cover = Counter(c for p in ok for c in {c for b in p['active_ingredients'].split(', ')
+                                            for c in conditions_of(b, bool(EYE_PRODUCT.search(p['name'])))})
     print('produk per kondisi:', ', '.join(f'{c} {cover[c]}' for c in CONDITIONS))
     if thin := [c for c in CONDITIONS if cover[c] < 3]:
         print('  kurang dari 3 produk, cari lagi:', ', '.join(thin))
