@@ -20,6 +20,12 @@ def allowed_file(filename):
     )
 
 
+def remove_file(path):
+    """Hapus foto dari upload yang gagal, supaya tidak tertinggal di static/uploads."""
+    if os.path.exists(path):
+        os.remove(path)
+
+
 @scan_bp.route('/upload', methods=['POST'])
 @jwt_required()
 def upload():
@@ -50,20 +56,28 @@ def upload():
 
     try:
         file.save(filepath)
+    except Exception as e:
+        remove_file(filepath)
+        current_app.logger.error(f"Gagal menyimpan file foto: {e}")
+        return jsonify({'error': 'Gagal menyimpan file foto'}), 500
+
+    try:
         img = Image.open(filepath)
         img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
         img.save(filepath, optimize=True, quality=85)
-    except Exception as e:
-        current_app.logger.error(f"Gagal menyimpan atau memproses gambar: {e}")
-        return jsonify({'error': 'Gagal memproses file foto'}), 500
+    except Exception as e:  # file rusak, terpotong, atau bukan gambar walau berakhiran .jpg/.png
+        remove_file(filepath)
+        current_app.logger.warning(f"Foto tidak bisa dibaca: {e}")
+        return jsonify({'error': 'File foto rusak atau bukan gambar. Gunakan foto JPG atau PNG'}), 400
 
     try:
         conditions, recommendations = analyze_skin_image(filepath, skin_type)
         acne = analyze_acne(filepath)
     except ValueError as e:
-        os.remove(filepath)
+        remove_file(filepath)
         return jsonify({'error': str(e)}), 422
     except Exception as e:
+        remove_file(filepath)
         current_app.logger.error(f"Gagal menjalankan analisis: {e}")
         return jsonify({'error': 'Gagal menjalankan analisis kulit'}), 500
 
@@ -88,6 +102,7 @@ def upload():
         scan_id = cursor.lastrowid
         conn.commit()
     except Exception as e:
+        remove_file(filepath)
         current_app.logger.error(f"Gagal menyimpan hasil scan ke database: {e}")
         return jsonify({'error': 'Gagal menyimpan hasil analisis'}), 500
     finally:
