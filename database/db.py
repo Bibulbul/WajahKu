@@ -38,7 +38,22 @@ def init_db(app):
             if os.path.exists(seed_path):
                 with open(seed_path, 'r', encoding='utf-8') as f:
                     conn.executescript(f.read())
-        
+
+        # Produk tambahan dari tim ML (salinan ml/data/produk_tambahan.sql). Seed di atas hanya jalan
+        # untuk database kosong, jadi produk yang nomor BPOM-nya belum ada dimasukkan di sini.
+        extra_path = os.path.join(db_dir, 'produk_tambahan.sql')
+        if os.path.exists(extra_path):
+            with open(extra_path, 'r', encoding='utf-8') as f:
+                sql = f.read()
+            conn.execute("CREATE TEMP TABLE new_products AS SELECT * FROM products WHERE 0")
+            conn.executescript(sql.replace('INSERT INTO products', 'INSERT INTO temp.new_products', 1))
+            conn.execute("""
+                INSERT INTO products (name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients)
+                SELECT name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients
+                FROM temp.new_products WHERE bpom_number NOT IN (SELECT bpom_number FROM products)
+            """)
+            conn.execute("DROP TABLE temp.new_products")
+
         # Check if test users exist (akun uji tidak dibuat di production: passwordnya tertulis di repo)
         cursor.execute("SELECT COUNT(*) FROM users")
         if not app.config['PRODUCTION'] and cursor.fetchone()[0] == 0:

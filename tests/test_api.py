@@ -7,7 +7,7 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 
 from config import Config
-from database.db import init_db
+from database.db import get_db, init_db
 from routes import auth
 from routes.auth import auth_bp
 from routes.scan import scan_bp
@@ -18,7 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def make_app():
     """App dengan database dan folder upload sementara, supaya data asli tidak tersentuh."""
     tmp = tempfile.mkdtemp()
-    for name in ('schema.sql', 'seed_data.sql'):
+    for name in ('schema.sql', 'seed_data.sql', 'produk_tambahan.sql'):
         shutil.copy(os.path.join(ROOT, 'database', name), tmp)
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -62,6 +62,18 @@ def test_corrupt_upload_rejected_and_removed():
     assert os.listdir(app.config['UPLOAD_FOLDER']) == []
 
 
+def test_extra_products_added_once():
+    app = make_app()
+    init_db(app)  # jalan kedua kali (restart server): produk tidak boleh dobel
+    with app.app_context():
+        rows = get_db().execute("SELECT bpom_number FROM products").fetchall()
+    numbers = [r[0] for r in rows]
+    assert len(numbers) == len(set(numbers))
+    assert 'NA18220107927' in numbers  # Implora Crystalice Eye Serum dari produk_tambahan.sql
+    assert len(numbers) > 20  # 20 produk seed + produk tambahan
+
+
 if __name__ == '__main__':
     test_login_limit(); test_login_success_resets_count(); test_corrupt_upload_rejected_and_removed()
+    test_extra_products_added_once()
     print('ok')
