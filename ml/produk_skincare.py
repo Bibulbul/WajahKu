@@ -21,9 +21,9 @@ CONDITIONS = ['jerawat', 'komedo', 'pori', 'kerutan', 'kemerahan', 'flek', 'kant
 
 # Bukan skincare wajah. Dicek lebih dulu: "maskara" jangan sampai terbaca "mask".
 EXCLUDE = re.compile(r'\b(' + '|'.join([
-    r'lip ?(stick|tint|cream|matte|gloss|liner)', r'lipstik', r'bedak', r'(loose|compact|two way) powder', r'foundation',
-    r'cushion', r'\b[bc]c cream', r'concealer', r'primer', r'mas[ck]ara', r'eye ?liner', r'eye ?shadow', r'pensil alis',
-    r'eyebrow', r'blush', r'perona', r'highlighter', r'contour', r'setting spray',
+    r'lip\w*', r'bibir', r'bedak', r'(loose|compact|two ?way) (powder|cake)', r'foundation',
+    r'cushion', r'\b[bc]c cream', r'concealer', r'primer', r'mas[ck]ara', r'eye ?liner', r'eye ?shadow', r'pensil',
+    r'\w*brows?\b', r'blush', r'perona', r'highlighter', r'contour', r'setting spray',
     r'shampoo', r'sampo', r'hair', r'rambut', r'conditioner',
     r'body (lotion|wash|serum|scrub|butter|cream|mist|oil|spray)', r'sabun mandi', r'lulur', r'hand (cream|& body|and body)',
     r'deodoran', r'deodorant', r'antiperspirant', r'parfum', r'perfume', r'eau de', r'cologne',
@@ -68,6 +68,8 @@ def check(row, seen):
     r = {k: (row.get(k) or '').strip() for k in COLUMNS}
     text = f"{r['nama']} {r['jenis_bpom']}".lower()
     nomor = re.sub(r'[\s.\-]', '', r['nomor_bpom']).upper()
+    if not nomor:
+        return None, 'nomor BPOM kosong: cari nama produknya di cekbpom.pom.go.id lalu isi'
     if not BPOM.fullmatch(nomor):
         return None, f'nomor BPOM "{r["nomor_bpom"]}" bukan notifikasi kosmetik (N + A-E + 11 angka)'
     if nomor in seen:

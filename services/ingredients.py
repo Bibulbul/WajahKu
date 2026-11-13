@@ -29,6 +29,8 @@ INGREDIENT_CONDITIONS = {
     r'tranexamic': ['flek'],
     r'kojic': ['flek'],
     r'licorice|glycyrrhiza': ['flek', 'kemerahan'],
+    r'hexylresorcinol|synovea': ['flek'],
+    r'glutathione': ['flek', 'kusam'],
     # Kerutan
     r'retinol|retinal|retinoid|retinyl': ['kerutan', 'flek'],
     r'bakuchiol': ['kerutan'],
@@ -43,6 +45,8 @@ INGREDIENT_CONDITIONS = {
     r'allantoin': ['kemerahan', 'kering'],
     r'aloe': ['kemerahan', 'kering'],
     r'mugwort|artemisia': ['kemerahan'],
+    r'heartleaf|houttuynia': ['kemerahan', 'jerawat'],
+    r'azulene|calendula': ['kemerahan'],
     r'snail': ['kering', 'kemerahan'],
     # Hidrasi
     r'hyaluronic|hyaluronate': ['kering', 'normal', 'kombinasi'],

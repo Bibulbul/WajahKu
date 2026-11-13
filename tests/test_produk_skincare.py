@@ -14,6 +14,9 @@ def test_rules():
     assert why is None and p['category'] == 'cleanser' and p['price'] == 35000 and p['bpom_verified'] == 0, why
     assert check(row(nama='Matte Lip Cream'), set())[1].startswith('bukan skincare')
     assert check(row(nama='Volume Maskara'), set())[1].startswith('bukan skincare')  # bukan "mask"
+    assert check(row(nama='Lip Protector Sunscreen SPF 50'), set())[1].startswith('bukan skincare')
+    for nama in ('Implora Day To Day Brow Pop', 'Implora Day to Day Two Way cake', 'Implora Softbrow Pensil'):
+        assert check(row(nama=nama), set())[1].startswith('bukan skincare'), nama
     assert check(row(nama='Tea Tree Face Wash', merek='The Body Shop'), set())[1] is None  # merek tidak ikut dicek
     assert check(row(nama='Body Lotion SPF 30'), set())[1].startswith('bukan skincare')
     assert check(row(nomor_bpom='MD 123456789012'), set())[1].startswith('nomor BPOM')
