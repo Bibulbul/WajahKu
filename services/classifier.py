@@ -124,7 +124,7 @@ def analyze_skin_image(image_path, skin_type=None):
     recommendations = {}
     for condition in found:
         rows = conn.execute(
-            "SELECT step_number, step_title, step_description FROM skincare_routines WHERE condition_type = ? ORDER BY step_number",
+            "SELECT step_number, step_title, step_description FROM skincare_routines WHERE condition_type = %s ORDER BY step_number",
             (condition,)
         ).fetchall()
         if rows:

@@ -11,13 +11,13 @@ def product_reviews(product_id):
         conn = get_db()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
+        cursor.execute("SELECT id FROM products WHERE id = %s", (product_id,))
         if not cursor.fetchone():
             return jsonify({'error': 'Produk tidak ditemukan'}), 404
 
         cursor.execute("""
             SELECT * FROM product_reviews 
-            WHERE product_id = ? 
+            WHERE product_id = %s 
             ORDER BY review_date DESC
         """, (product_id,))
         reviews = [dict(row) for row in cursor.fetchall()]

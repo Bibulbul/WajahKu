@@ -1,72 +1,62 @@
-import sqlite3
 import os
+import psycopg
+from psycopg.rows import dict_row
+from psycopg.types.numeric import FloatLoader
+from psycopg.types.string import TextLoader
 from werkzeug.security import generate_password_hash
 from flask import current_app
 
+SQL_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Frontend (parseScanDate) membaca waktu sebagai teks "YYYY-MM-DD HH:MM:SS" UTC, dan AVG() jadi angka, bukan Decimal
+psycopg.adapters.register_loader('timestamp', TextLoader)
+psycopg.adapters.register_loader('numeric', FloatLoader)
+
+
 def get_db():
     """Get database connection"""
-    conn = sqlite3.connect(current_app.config['DATABASE'])
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg.connect(current_app.config['DATABASE'], row_factory=dict_row)
+
+
+def read_sql(name):
+    with open(os.path.join(SQL_DIR, name), 'r', encoding='utf-8') as f:
+        return f.read()
+
 
 def init_db(app):
     """Initialize database with schema and seed data"""
-    db_dir = os.path.dirname(app.config['DATABASE'])
-    if not os.path.exists(db_dir):
-        os.makedirs(db_dir)
-    
     with app.app_context():
         conn = get_db()
-        
-        # Execute schema
-        schema_path = os.path.join(db_dir, 'schema.sql')
-        if os.path.exists(schema_path):
-            with open(schema_path, 'r', encoding='utf-8') as f:
-                conn.executescript(f.read())
-        
-        # Database yang dibuat sebelum deteksi jerawat belum punya kolom acne
-        if 'acne' not in [row[1] for row in conn.execute("PRAGMA table_info(scans)")]:
-            conn.execute("ALTER TABLE scans ADD COLUMN acne TEXT")
 
-        cursor = conn.cursor()
-        
+        # Server production bisa menjalankan beberapa worker sekaligus: init_db antre supaya seed tidak dobel
+        conn.execute("SELECT pg_advisory_xact_lock(20241)")
+
+        # Execute schema
+        conn.execute(read_sql('schema.sql'))
+
         # Check if data exists
-        cursor.execute("SELECT COUNT(*) FROM products")
-        if cursor.fetchone()[0] == 0:
-            # Execute seed data
-            seed_path = os.path.join(db_dir, 'seed_data.sql')
-            if os.path.exists(seed_path):
-                with open(seed_path, 'r', encoding='utf-8') as f:
-                    conn.executescript(f.read())
+        if conn.execute("SELECT COUNT(*) AS n FROM products").fetchone()['n'] == 0:
+            conn.execute(read_sql('seed_data.sql'))
 
         # Produk tambahan dari tim ML (salinan ml/data/produk_tambahan.sql). Seed di atas hanya jalan
         # untuk database kosong, jadi produk yang nomor BPOM-nya belum ada dimasukkan di sini.
-        extra_path = os.path.join(db_dir, 'produk_tambahan.sql')
-        if os.path.exists(extra_path):
-            with open(extra_path, 'r', encoding='utf-8') as f:
-                sql = f.read()
-            conn.execute("CREATE TEMP TABLE new_products AS SELECT * FROM products WHERE 0")
-            conn.executescript(sql.replace('INSERT INTO products', 'INSERT INTO temp.new_products', 1))
-            conn.execute("""
-                INSERT INTO products (name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients)
-                SELECT name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients
-                FROM temp.new_products WHERE bpom_number NOT IN (SELECT bpom_number FROM products)
-            """)
-            conn.execute("DROP TABLE temp.new_products")
+        conn.execute("CREATE TEMP TABLE new_products ON COMMIT DROP AS SELECT * FROM products WITH NO DATA")
+        conn.execute(read_sql('produk_tambahan.sql').replace('INSERT INTO products', 'INSERT INTO new_products', 1))
+        conn.execute("""
+            INSERT INTO products (name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients)
+            SELECT name, brand, category, description, price, bpom_number, bpom_verified, active_ingredients
+            FROM new_products WHERE bpom_number NOT IN (SELECT bpom_number FROM products)
+        """)
 
         # Check if test users exist (akun uji tidak dibuat di production: passwordnya tertulis di repo)
-        cursor.execute("SELECT COUNT(*) FROM users")
-        if not app.config['PRODUCTION'] and cursor.fetchone()[0] == 0:
+        no_users = conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()['n'] == 0
+        if not app.config['PRODUCTION'] and no_users:
             # Create test accounts
-            cursor.execute("""
-                INSERT INTO users (username, email, password_hash, role) 
-                VALUES (?, ?, ?, ?)
-            """, ('testuser', 'user@test.com', generate_password_hash('user123'), 'user'))
-            
-            cursor.execute("""
-                INSERT INTO users (username, email, password_hash, role) 
-                VALUES (?, ?, ?, ?)
-            """, ('admin', 'admin@test.com', generate_password_hash('admin123'), 'admin'))
-        
+            conn.execute("""
+                INSERT INTO users (username, email, password_hash, role)
+                VALUES (%s, %s, %s, %s), (%s, %s, %s, %s)
+            """, ('testuser', 'user@test.com', generate_password_hash('user123'), 'user',
+                  'admin', 'admin@test.com', generate_password_hash('admin123'), 'admin'))
+
         conn.commit()
         conn.close()

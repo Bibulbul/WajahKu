@@ -24,5 +24,6 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max
 
-    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database', 'wajahku.db')
+    # PostgreSQL. Di server deploy isi DATABASE_URL dari penyedia database (Neon/Supabase/Railway/dll)
+    DATABASE = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/wajahku')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}

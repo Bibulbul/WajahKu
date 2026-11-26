@@ -89,7 +89,7 @@ def upload():
         cursor = conn.cursor()
         cursor.execute(
             """INSERT INTO scans (user_id, photo_path, conditions_detected, confidence_scores, recommendations, acne)
-               VALUES (?, ?, ?, ?, ?, ?)""",
+               VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
             (
                 user_id,
                 relative_path,
@@ -99,7 +99,7 @@ def upload():
                 json.dumps(acne)
             )
         )
-        scan_id = cursor.lastrowid
+        scan_id = cursor.fetchone()['id']
         conn.commit()
     except Exception as e:
         remove_file(filepath)
@@ -130,10 +130,10 @@ def get_scan(scan_id):
         cursor = conn.cursor()
 
         if claims.get('role') == 'admin':
-            cursor.execute("SELECT * FROM scans WHERE id = ?", (scan_id,))
+            cursor.execute("SELECT * FROM scans WHERE id = %s", (scan_id,))
         else:
             cursor.execute(
-                "SELECT * FROM scans WHERE id = ? AND user_id = ?",
+                "SELECT * FROM scans WHERE id = %s AND user_id = %s",
                 (scan_id, user_id)
             )
 
@@ -191,7 +191,7 @@ def api_history():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM scans WHERE user_id = ? ORDER BY scan_date DESC LIMIT 50",
+            "SELECT * FROM scans WHERE user_id = %s ORDER BY scan_date DESC LIMIT 50",
             (user_id,)
         )
         scans = []

@@ -1,6 +1,5 @@
 import io
 import os
-import shutil
 import tempfile
 
 from flask import Flask
@@ -11,18 +10,15 @@ from database.db import get_db, init_db
 from routes import auth
 from routes.auth import auth_bp
 from routes.scan import scan_bp
-
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from tests.pg import fresh_db
 
 
 def make_app():
     """App dengan database dan folder upload sementara, supaya data asli tidak tersentuh."""
     tmp = tempfile.mkdtemp()
-    for name in ('schema.sql', 'seed_data.sql', 'produk_tambahan.sql'):
-        shutil.copy(os.path.join(ROOT, 'database', name), tmp)
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.config.update(DATABASE=os.path.join(tmp, 'tes.db'), UPLOAD_FOLDER=os.path.join(tmp, 'uploads'))
+    app.config.update(DATABASE=fresh_db(), UPLOAD_FOLDER=os.path.join(tmp, 'uploads'))
     JWTManager(app)
     init_db(app)
     app.register_blueprint(auth_bp)
@@ -67,7 +63,7 @@ def test_extra_products_added_once():
     init_db(app)  # jalan kedua kali (restart server): produk tidak boleh dobel
     with app.app_context():
         rows = get_db().execute("SELECT bpom_number FROM products").fetchall()
-    numbers = [r[0] for r in rows]
+    numbers = [r['bpom_number'] for r in rows]
     assert len(numbers) == len(set(numbers))
     assert 'NA18220107927' in numbers  # Implora Crystalice Eye Serum dari produk_tambahan.sql
     assert len(numbers) > 20  # 20 produk seed + produk tambahan

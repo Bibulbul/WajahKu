@@ -1,18 +1,16 @@
-import os
-import sqlite3
+import psycopg
+from psycopg.rows import dict_row
 
+import database.db  # loader numeric/timestamp yang sama dengan aplikasi
 from services.recommend import reasons, recommend_products
-
-DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'database')
+from tests.pg import fresh_db
 
 
 def seed_products():
-    """Produk seed_data.sql dengan avg_rating, dimuat ke database di memori."""
-    conn = sqlite3.connect(':memory:')
-    conn.row_factory = sqlite3.Row
+    """Produk seed_data.sql dengan avg_rating, dimuat ke schema PostgreSQL sementara."""
+    conn = psycopg.connect(fresh_db(), row_factory=dict_row)
     for name in ('schema.sql', 'seed_data.sql'):
-        with open(os.path.join(DB_DIR, name), encoding='utf-8') as f:
-            conn.executescript(f.read())
+        conn.execute(database.db.read_sql(name))
     rows = conn.execute("""
         SELECT p.*, COUNT(pr.id) as review_count, COALESCE(AVG(pr.rating), 0) as avg_rating
         FROM products p LEFT JOIN product_reviews pr ON p.id = pr.product_id

@@ -33,16 +33,16 @@ def register():
         conn = get_db()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         if cursor.fetchone():
             return jsonify({'error': 'Email sudah terdaftar'}), 409
 
         password_hash = generate_password_hash(password)
         cursor.execute(
-            "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
+            "INSERT INTO users (username, email, password_hash, role) VALUES (%s, %s, %s, %s) RETURNING id",
             (username, email, password_hash, 'user')
         )
-        user_id = cursor.lastrowid
+        user_id = cursor.fetchone()['id']
         conn.commit()
     except Exception:
         return jsonify({'error': 'Terjadi kesalahan, silakan coba lagi'}), 500
@@ -87,7 +87,7 @@ def login():
     try:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
     except Exception:
         return jsonify({'error': 'Terjadi kesalahan, silakan coba lagi'}), 500
@@ -130,7 +130,7 @@ def get_current_user():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, username, email, role, created_at FROM users WHERE id = ?",
+            "SELECT id, username, email, role, created_at FROM users WHERE id = %s",
             (user_id,)
         )
         user = cursor.fetchone()

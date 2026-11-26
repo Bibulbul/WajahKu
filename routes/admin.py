@@ -123,7 +123,8 @@ def create_product():
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO products (name, brand, category, description, price, bpom_number, active_ingredients)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         """, (
             data['name'],
             data['brand'],
@@ -133,7 +134,7 @@ def create_product():
             data['bpom_number'],
             data.get('active_ingredients', '')
         ))
-        product_id = cursor.lastrowid
+        product_id = cursor.fetchone()['id']
         conn.commit()
     except Exception as e:
         current_app.logger.error(f"Gagal menambah produk: {e}")
@@ -161,15 +162,15 @@ def update_product(product_id):
         conn = get_db()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
+        cursor.execute("SELECT id FROM products WHERE id = %s", (product_id,))
         if not cursor.fetchone():
             return jsonify({'error': 'Produk tidak ditemukan'}), 404
 
         cursor.execute("""
             UPDATE products 
-            SET name = ?, brand = ?, category = ?, description = ?, 
-                price = ?, bpom_number = ?, active_ingredients = ?
-            WHERE id = ?
+            SET name = %s, brand = %s, category = %s, description = %s, 
+                price = %s, bpom_number = %s, active_ingredients = %s
+            WHERE id = %s
         """, (
             data.get('name'),
             data.get('brand'),
@@ -203,12 +204,12 @@ def delete_product(product_id):
         conn = get_db()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
+        cursor.execute("SELECT id FROM products WHERE id = %s", (product_id,))
         if not cursor.fetchone():
             return jsonify({'error': 'Produk tidak ditemukan'}), 404
 
-        cursor.execute("DELETE FROM product_reviews WHERE product_id = ?", (product_id,))
-        cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+        cursor.execute("DELETE FROM product_reviews WHERE product_id = %s", (product_id,))
+        cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
         conn.commit()
     except Exception as e:
         current_app.logger.error(f"Gagal menghapus produk: {e}")

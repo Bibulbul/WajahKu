@@ -4,6 +4,7 @@ flask-cors==4.0.0
 Pillow==10.4.0
 python-dotenv==1.0.0
 werkzeug==3.0.1
+psycopg[binary]==3.3.9
 onnxruntime==1.30.0
 numpy==2.4.4
 opencv-python-headless==4.11.0.86

@@ -20,7 +20,7 @@ export const SKIN_ISSUES = {
   kantung_mata: 'Kantung mata',
 };
 
-// SQLite menyimpan CURRENT_TIMESTAMP dalam UTC tanpa penanda zona
+// Database menyimpan waktu dalam UTC tanpa penanda zona (lihat database/schema.sql)
 export const parseScanDate = (value) => new Date(`${value.replace(' ', 'T')}Z`);
 
 const relativeTime = new Intl.RelativeTimeFormat('id', { numeric: 'auto' });

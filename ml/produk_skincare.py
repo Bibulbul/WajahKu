@@ -7,7 +7,7 @@ Hasil di folder yang sama: produk_bersih.csv, produk_ditolak.csv (dengan alasan)
 Yang diterima hanya skincare wajah: nomor notifikasi kosmetik BPOM (N + A-E + 11 angka), bukan riasan/rambut/
 tubuh/parfum/kuku/mulut, kategori salah satu dari CATEGORIES, dan bahan aktif terisi (dipakai rekomendasi produk).
 """
-import csv, os, re, sqlite3, sys
+import csv, os, re, sys
 from collections import Counter
 from datetime import date
 
@@ -57,10 +57,7 @@ def read_rows(path):
 
 def existing_bpom():
     """Nomor BPOM yang sudah ada di seed_data.sql, supaya tidak dobel."""
-    db = sqlite3.connect(':memory:')
-    for name in ('schema.sql', 'seed_data.sql'):
-        db.executescript(open(os.path.join(ROOT, 'database', name), encoding='utf-8').read())
-    return {n for (n,) in db.execute('SELECT bpom_number FROM products')}
+    return set(BPOM.findall(open(os.path.join(ROOT, 'database', 'seed_data.sql'), encoding='utf-8').read()))
 
 
 def check(row, seen):

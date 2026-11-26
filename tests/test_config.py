@@ -21,17 +21,14 @@ def test_production_needs_keys():
 
 def test_production_no_debug_no_test_accounts():
     code = '''
-import tempfile, shutil, os
 from flask import Flask
 from config import Config
 from database.db import init_db, get_db
-d = tempfile.mkdtemp()
-for f in ('schema.sql', 'seed_data.sql'):
-    shutil.copy(os.path.join('database', f), d)
-app = Flask(__name__); app.config.from_object(Config); app.config['DATABASE'] = os.path.join(d, 'tes.db')
+from tests.pg import fresh_db
+app = Flask(__name__); app.config.from_object(Config); app.config['DATABASE'] = fresh_db()
 init_db(app)
 with app.app_context():
-    print(app.config['DEBUG'], get_db().execute('SELECT COUNT(*) FROM users').fetchone()[0])
+    print(app.config['DEBUG'], get_db().execute('SELECT COUNT(*) AS n FROM users').fetchone()['n'])
 '''
     assert run(code, APP_ENV='production', **KEYS).stdout.split() == ['False', '0']
     assert run(code).stdout.split() == ['True', '2']
